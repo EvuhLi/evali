@@ -1,0 +1,41 @@
+/* Eva Li — Personal Site
+   Misty Chinese ink landscape · cinnabar accent · serif scholarly
+   ─────────────────────────────────────────────────────────────── */
+
+@font-face { font-family: 'CormorantGaramond'; font-style: normal; font-display: swap; }
+
+:root {
+  --paper:        #f4efe3;
+  --paper-2:      #ebe4d2;
+  --paper-3:      #e1d8c2;
+  --ink-1:        #1b1d22;   /* deepest ink */
+  --ink-2:        #2c2f36;
+  --ink-3:        #4a4e57;
+  --ink-4:        #7a7e88;
+  --ink-mute:     #8a8579;
+  --ink-soft:     rgba(27,29,34,.62);
+  --cinnabar:     oklch(0.52 0.16 28);
+  --cinnabar-2:   oklch(0.46 0.17 28);
+  --rule:         rgba(27,29,34,.18);
+
+  --serif-display: 'Cormorant Garamond', 'EB Garamond', Georgia, serif;
+  --serif-body:    'EB Garamond', Georgia, 'Times New Roman', serif;
+  --mono:          'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --maxw: 1100px;
+}
+
+/* ─── Reset ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--paper);
+  color: var(--ink-1);
+  font-family: var(--serif-body);
+  font-size: 19px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
