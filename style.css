@@ -39,3 +39,158 @@ body {
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
 }
+
+/* paper grain */
+.paper-grain {
+  position: fixed; inset: 0; pointer-events: none; z-index: 1;
+  background-image:
+    radial-gradient(1200px 800px at 18% 12%, rgba(255,250,235,.35), transparent 60%),
+    radial-gradient(900px 700px  at 85% 78%, rgba(120,90,60,.06),  transparent 65%);
+  mix-blend-mode: multiply;
+}
+.paper-grain::after {
+  content: ""; position: absolute; inset: -2px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.16  0 0 0 0 0.13  0 0 0 0 0.08  0 0 0 0.07 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/></svg>");
+  background-size: 240px 240px;
+  mix-blend-mode: multiply; opacity: .55;
+}
+
+/* ─── Layout ────────────────────────────────────────────────── */
+main { position: relative; z-index: 2; }
+.section {
+  position: relative;
+  min-height: 100vh;
+  padding: 14vh 6vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.section-inner {
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+  position: relative;
+  z-index: 3;
+}
+
+/* parallax stage = background scenery */
+.scene {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+  z-index: 0;
+}
+
+/* paper wash behind reading column for legibility */
+.scene::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: min(960px, 84vw);
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center,
+    rgba(244,239,227,.85) 0%,
+    rgba(244,239,227,.6)  40%,
+    rgba(244,239,227,0)   75%);
+  pointer-events: none;
+}
+.layer {
+  position: absolute; left: 0; right: 0;
+  background-repeat: no-repeat;
+  background-position: center bottom;
+  background-size: cover;
+  will-change: transform;
+}
+
+/* ─── Type scale ────────────────────────────────────────────── */
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  display: inline-flex; align-items: center; gap: 12px;
+}
+.eyebrow::before {
+  content: ""; width: 28px; height: 1px; background: var(--ink-3);
+}
+h1, h2, h3 {
+  font-family: var(--serif-display);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 0;
+  color: var(--ink-1);
+}
+h1 { font-size: clamp(56px, 9vw, 132px); line-height: .96; font-weight: 400; font-style: italic; }
+h2 { font-size: clamp(40px, 5.5vw, 76px); line-height: 1.02; font-weight: 400; }
+h3 { font-size: clamp(22px, 2.2vw, 28px); line-height: 1.15; }
+p  { color: var(--ink-2); }
+.lede { font-size: clamp(20px, 1.6vw, 24px); line-height: 1.5; color: var(--ink-2); max-width: 56ch; }
+em { font-style: italic; color: var(--ink-1); }
+a {
+  color: var(--ink-1); text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 100% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: color .3s ease;
+}
+a:hover { color: var(--cinnabar); }
+.cinnabar { color: var(--cinnabar); }
+
+/* ─── Reusable bits ─────────────────────────────────────────── */
+.seal {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  width: 54px; height: 54px;
+  background: var(--cinnabar);
+  color: #fdf6ec;
+  font-family: var(--serif-display);
+  font-size: 26px; font-weight: 500;
+  font-style: normal;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(120,30,15,.4) inset, 0 0 0 3px var(--cinnabar);
+  letter-spacing: -.02em;
+  transform: rotate(-4deg);
+  position: relative;
+}
+.seal::before, .seal::after {
+  content: ""; position: absolute; inset: 0;
+  border-radius: 3px; pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.7' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.55 -0.15'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 80px 80px;
+  mix-blend-mode: screen; opacity: .9;
+}
+.seal::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='3.2' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.45 -0.05'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  mix-blend-mode: multiply; opacity: .8;
+}
+
+.rule {
+  height: 1px; background: var(--rule); border: 0; margin: 36px 0;
+}
+.rule-tall { width: 1px; height: 100%; background: var(--rule); }
+
+/* nav */
+.topnav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 22px 5vw;
+  font-family: var(--mono);
+  font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--ink-2);
+  pointer-events: none;
+}
+.topnav > * { pointer-events: auto; }
+.topnav a { background: none; }
+.topnav a:hover { color: var(--cinnabar); }
+.topnav .brand {
+  font-family: var(--serif-display);
+  font-style: italic;
+  font-size: 22px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-1);
+}
+.topnav nav { display: flex; gap: 28px; align-items: center; }
+.topnav .num { color: var(--ink-4); margin-right: 6px; }
