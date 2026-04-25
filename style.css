@@ -194,3 +194,62 @@ a:hover { color: var(--cinnabar); }
 }
 .topnav nav { display: flex; gap: 28px; align-items: center; }
 .topnav .num { color: var(--ink-4); margin-right: 6px; }
+
+/* ─── Section header (eyebrow + title pair) ─────────────────── */
+.section-head {
+  display: flex; flex-direction: column; gap: 18px;
+  margin-bottom: 60px;
+  max-width: 720px;
+}
+.section-head .index {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .25em;
+  color: var(--ink-3); text-transform: uppercase;
+  display: flex; gap: 14px; align-items: center;
+}
+.section-head .index::before { content: ""; width: 36px; height: 1px; background: var(--cinnabar); }
+
+/* ─── About ─────────────────────────────────────────────────── */
+.about-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 80px;
+  align-items: start;
+}
+.about-grid .col-left p + p { margin-top: 1em; }
+.about-grid .col-right {
+  font-family: var(--mono); font-size: 12px; line-height: 1.75;
+  color: var(--ink-3);
+}
+.about-grid .col-right .row { display: flex; justify-content: space-between; gap: 24px; padding: 8px 0; border-bottom: 1px dashed var(--rule); }
+.about-grid .col-right .row span:last-child { color: var(--ink-1); font-family: var(--serif-display); font-size: 16px; font-style: italic; }
+
+/* ─── Projects ──────────────────────────────────────────────── */
+.proj-list { display: flex; flex-direction: column; gap: 0; }
+.proj {
+  display: grid;
+  grid-template-columns: 60px 1fr 220px 120px;
+  gap: 32px;
+  align-items: baseline;
+  padding: 28px 0;
+  border-bottom: 1px solid var(--rule);
+  cursor: pointer;
+  transition: padding .35s ease, background .35s ease;
+}
+.proj:hover {
+  padding-left: 18px;
+  padding-right: 18px;
+  background: rgba(255,250,235,.45);
+}
+.proj .num { font-family: var(--mono); font-size: 11px; color: var(--ink-4); letter-spacing: .15em; }
+.proj .name { font-family: var(--serif-display); font-size: 30px; line-height: 1.1; font-weight: 400; }
+.proj .name em { font-style: italic; }
+.proj .stack { font-family: var(--mono); font-size: 11px; color: var(--ink-3); letter-spacing: .08em; }
+.proj .yr { font-family: var(--mono); font-size: 11px; color: var(--ink-3); text-align: right; letter-spacing: .15em; }
+.proj-desc {
+  display: none;
+  padding: 0 0 8px 92px;
+  color: var(--ink-2);
+  max-width: 64ch;
+}
+.proj.open .proj-desc { display: block; padding-bottom: 24px; }
+.proj.open .name { color: var(--cinnabar); }
