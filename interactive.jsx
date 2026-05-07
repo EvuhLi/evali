@@ -80,7 +80,7 @@ function InkCursor({ enabled = true }) {
 
     let raf;
     const TTL = 320;  // shorter trail
-    const MAX_R = 9;
+    const MAX_R = 4;
     const N_BLOB = 10; // perimeter points for organic shape
 
     const draw = () => {
@@ -118,7 +118,7 @@ function InkCursor({ enabled = true }) {
         dropY = targetY;
 
         const speed = 0;
-        const baseR = 8;
+        const baseR = MAX_R;
 
         // build organic perimeter: multi-frequency wobble on each point's radius
         // slower wobble when moving (inertia), more expressive when still
