@@ -165,12 +165,13 @@ const bgMountainFrag = `
   uniform vec3 inkColor;
   uniform vec3 contourColor;
   void main() {
-    if (vHeight < mistLevel) discard;
+    float alpha = smoothstep(mistLevel, mistLevel + 0.09, vHeight);
+    if (alpha <= 0.0) discard;
     float contour = smoothstep(0.16, 0.7, vBleed);
     float highInk = smoothstep(0.45, 0.95, vHeight) * 0.18;
     vec3 color = mix(inkColor, contourColor, contour);
     color = mix(color, contourColor, highInk);
-    gl_FragColor = vec4(color, 1.0);
+    gl_FragColor = vec4(color, alpha);
   }
 `;
 
@@ -191,8 +192,9 @@ const bgOutlineFrag = `
   uniform float mistLevel;
   uniform vec3 contourColor;
   void main() {
-    if (vHeight < mistLevel) discard;
-    gl_FragColor = vec4(contourColor, 1.0);
+    float alpha = smoothstep(mistLevel, mistLevel + 0.09, vHeight);
+    if (alpha <= 0.0) discard;
+    gl_FragColor = vec4(contourColor, alpha);
   }
 `;
 
@@ -222,6 +224,7 @@ const createBirdCluster = (centerX, centerY, centerZ) => {
   cluster.renderOrder = 999; scene.add(cluster); birdClusters.push(cluster);
 };
 createBirdCluster(4, 0, 2); createBirdCluster(-5, -1, 4);
+// far-ring clusters — positions scaled from far bgPlacements × 0.62, heightOffset=10 to float near bg peaks
 
 // --- ASSET LOADER ---
 const loader = new THREE.TextureLoader();
@@ -265,23 +268,23 @@ loader.load(HM_FILE, (heightTex) => {
   const createBgMaterial = (inkColor, contourColor) => new THREE.ShaderMaterial({
     uniforms: {
       heightMap: {value: heightTex},
-      displacementScale: {value: DISP * 2},
+      displacementScale: {value: DISP * 1},
       mistLevel: {value: 0.16},
       inkColor: {value: inkColor},
       contourColor: {value: contourColor}
     },
     vertexShader: surfaceVert, fragmentShader: bgMountainFrag,
-    transparent: false, depthWrite: true, side: THREE.FrontSide
+    transparent: true, depthWrite: true, side: THREE.FrontSide
   });
   const createBgOutlineMaterial = (contourColor) => new THREE.ShaderMaterial({
     uniforms: {
       heightMap: {value: heightTex},
-      displacementScale: {value: DISP * 2},
+      displacementScale: {value: DISP * 1},
       mistLevel: {value: 0.16},
       contourColor: {value: contourColor}
     },
     vertexShader: bgOutlineVert, fragmentShader: bgOutlineFrag,
-    transparent: false, depthWrite: true, side: THREE.BackSide
+    transparent: true, depthWrite: true, side: THREE.BackSide
   });
   const bgPlacements = [
     // near ring
@@ -321,13 +324,23 @@ loader.load(HM_FILE, (heightTex) => {
     [-88, -19.8, -132, 5.75]
   ];
 
-  bgPlacements.forEach(([x, y, z, rotY]) => {
+  // Offset each ring by 1/3 of the per-mountain angular step (36°) so rings interleave
+  const ringOffsets = [0, Math.PI / 15, 2 * Math.PI / 15];
+  bgPlacements.forEach(([x, y, z, rotY], i) => {
+    const θ = ringOffsets[Math.floor(i / 10)];
+    const cosT = Math.cos(θ), sinT = Math.sin(θ);
+    const rx = x * cosT - z * sinT;
+    const rz = x * sinT + z * cosT;
     const BG_DISTANCE_SCALE = 0.62;
-    const scaledX = x * BG_DISTANCE_SCALE;
-    const scaledZ = z * BG_DISTANCE_SCALE;
+    const scaledX = rx * BG_DISTANCE_SCALE;
+    const scaledZ = rz * BG_DISTANCE_SCALE;
     const dist = Math.hypot(scaledX, scaledZ);
-    const mist = THREE.MathUtils.clamp((dist - 58) / 115, 0, 1);
-    const tone = THREE.MathUtils.lerp(0.9, 0.76, mist);
+    const MIST_START = 30;   // dist where mist begins fading in
+    const MIST_END   = 110;  // dist where mist is fully applied
+    const TONE_NEAR  = 0.80; // ink darkness of closest bg mountains
+    const TONE_FAR   = 0.95; // washes toward paper white for far mountains
+    const mist = THREE.MathUtils.clamp((dist - MIST_START) / (MIST_END - MIST_START), 0, 1);
+    const tone = THREE.MathUtils.lerp(TONE_NEAR, TONE_FAR, mist);
     const inkColor = new THREE.Color(tone, tone * 0.96, tone * 0.9);
     const contourTone = Math.max(tone - 0.08, 0.28);
     const contourColor = new THREE.Color(contourTone, contourTone * 0.95, contourTone * 0.9);
@@ -335,8 +348,8 @@ loader.load(HM_FILE, (heightTex) => {
     const bgOutline = new THREE.Mesh(bgGeo, createBgOutlineMaterial(contourColor));
     bgM.position.set(scaledX, y, scaledZ);
     bgOutline.position.copy(bgM.position);
-    bgM.rotation.y = rotY;
-    bgOutline.rotation.y = rotY;
+    bgM.rotation.y = rotY + θ;
+    bgOutline.rotation.y = rotY + θ;
     scene.add(bgOutline, bgM);
   });
 
