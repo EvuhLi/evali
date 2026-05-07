@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Eva Li · Ink & Code</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- paper -->
+<div class="paper-grain"></div>
+
+<!-- top nav -->
+<header class="topnav">
+  <a href="#hero" class="brand"><i>Eva Li</i></a>
+  <nav>
+    <a href="#about"><span class="num">Ⅰ</span> About</a>
+    <a href="#projects"><span class="num">Ⅱ</span> Work</a>
+    <a href="#experience"><span class="num">Ⅲ</span> Path</a>
+    <a href="#skills"><span class="num">Ⅳ</span> Skills</a>
+    <a href="#interests"><span class="num">Ⅴ</span> Currents</a>
+    <a href="#contact"><span class="num">Ⅵ</span> Contact</a>
+    <a href="assets/Eva Li Resume.pdf" target="_blank" rel="noreferrer" style="color:var(--cinnabar)">Résumé ↗</a>
+  </nav>
+</header>
+
+<main id="root"></main>
+
+<footer class="colophon">
+  <span>© MMXXVI · Eva Li</span>
+  <span>Pittsburgh </span>
+</footer>
+
+<!-- Three.js -->
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+
+<!-- React + Babel -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="scenes.jsx"></script>
+<script type="text/babel" src="interactive.jsx"></script>
+<script type="text/babel" src="content.jsx"></script>
+<script type="text/babel" src="mountain-journey.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "parallax": 1,
+  "mist": 0.4,
+  "intensity": 1,
+  "accent": true,
+  "mood": "day",
+  "inkCursor": true
+}/*EDITMODE-END*/;
+
+// expose live values for Scene reads
+window.__inkFx = { ...TWEAK_DEFAULTS };
+
+function Hero({ fx }) {
+  return (
+    <section id="hero" className="section" data-screen-label="01 Hero">
+      <Scene
+        layers={[
+          // far ridges — top band only
+          { src: 'assets/ink-7.png', speed: 0.05, opacity: .35,
+            size: '120% auto', anchorX: 'center', anchorY: '0%',
+            width: '120%', left: '-10%', height: '45%', top: '-2%' },
+          // mid mountain mass — far left margin
+          { src: 'assets/ink-4.png', speed: 0.18, opacity: .42,
+            size: 'auto 80%', anchorX: 'left', anchorY: 'bottom',
+            width: '36%', left: '-12%', bottom: '-8%' },
+          // tall pine cliff — far right margin
+          { src: 'assets/ink-2.png', speed: 0.30, opacity: .5,
+            size: 'auto 95%', anchorX: 'right', anchorY: 'bottom',
+            width: '32%', right: '-10%', bottom: '-10%' },
+          // pagoda outcrop — left margin foreground
+          { src: 'assets/ink-1.png', speed: 0.48, opacity: .5,
+            size: 'auto 60%', anchorX: 'left', anchorY: 'bottom',
+            width: '24%', left: '-4%', bottom: '-12%' },
+          // bridge — right margin foreground
+          { src: 'assets/ink-5.png', speed: 0.6, opacity: .45,
+            size: 'auto 38%', anchorX: 'right', anchorY: 'bottom',
+            width: '22%', right: '0%', bottom: '-8%' },
+        ]}
+        mistOpacity={fx.mist}
+        intensity={fx.intensity}
+        parallaxStrength={fx.parallax}
+      />
+      <Birds count={6} intensity={fx.intensity} region={{ top: 10, h: 30 }} />
+      <River y="78%" height="14%" intensity={fx.intensity} />
+
+      <div className="section-inner" style={{position:'relative',zIndex:5}}>
+        <div className="hero-mark">
+          <span>Portfolio</span>
+          <span style={{color:'var(--ink-4)'}}>—</span>
+          <span>Pittsburgh, PA</span>
+        </div>
+        <h1>
+          Hi! I'm 
+          <span className="name-li">Eva</span> <span className="name-li">Li</span>
+        </h1>
+        <div className="hero-meta">
+          <div className="meta-block">
+            Currently<br/>
+            <b>SWE Intern at CTAT · CMU SCS</b>
+          </div>
+          <div className="meta-block">
+            Studying<br/>
+            <b>Computer Science & Information Systems</b>
+          </div>
+          <div className="meta-block">
+            Available<br/>
+            <b>SWE Internships, Summer 2026</b>
+          </div>
+          <span className="seal" aria-hidden="true">李</span>
+        </div>
+      </div>
+
+      <div className="scroll-cue">
+        <span>scroll</span>
+      </div>
+    </section>
+  );
+}
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+  // keep window.__inkFx in sync so Scene-children can read live values
+  useEffect(() => {
+    window.__inkFx = { ...t };
+    // accent toggle
+    const root = document.documentElement;
+    if (t.accent) {
+      root.style.setProperty('--cinnabar', 'oklch(0.52 0.16 28)');
+      root.style.setProperty('--cinnabar-2', 'oklch(0.46 0.17 28)');
+    } else {
+      root.style.setProperty('--cinnabar', '#1b1d22');
+      root.style.setProperty('--cinnabar-2', '#1b1d22');
+    }
+    // mood
+    if (t.mood === 'dusk') {
+      root.style.setProperty('--paper',   '#eadcc4');
+      root.style.setProperty('--paper-2', '#dec9a4');
+      root.style.setProperty('--ink-1',   '#2a201a');
+      root.style.setProperty('--ink-2',   '#3a2e25');
+    } else if (t.mood === 'night') {
+      root.style.setProperty('--paper',   '#161821');
+      root.style.setProperty('--paper-2', '#1d2030');
+      root.style.setProperty('--ink-1',   '#e8e3d4');
+      root.style.setProperty('--ink-2',   '#c9c2b1');
+      root.style.setProperty('--ink-3',   '#8e8a7e');
+      root.style.setProperty('--ink-4',   '#5b5a55');
+      root.style.setProperty('--rule',    'rgba(232,227,212,.16)');
+    } else {
+      root.style.setProperty('--paper',   '#f4efe3');
+      root.style.setProperty('--paper-2', '#ebe4d2');
+      root.style.setProperty('--ink-1',   '#1b1d22');
+      root.style.setProperty('--ink-2',   '#2c2f36');
+      root.style.setProperty('--ink-3',   '#4a4e57');
+      root.style.setProperty('--ink-4',   '#7a7e88');
+      root.style.setProperty('--rule',    'rgba(27,29,34,.18)');
+    }
+  }, [t]);
+
+  return (
+    <>
+      <Hero fx={t} />
+      <About />
+      <Projects />
+      <Experience />
+      <MountainJourney />
+      <Skills />
+      <Interests />
+      <Contact />
+      <section id="studio" className="section" data-screen-label="08 Studio">
+        <MountainStudio />
+      </section>
+      <InkCursor enabled={t.inkCursor} />
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Atmosphere" />
+        <TweakSlider label="Parallax depth" value={t.parallax} min={0} max={2} step={.1}
+                     onChange={(v) => setTweak('parallax', v)} />
+        <TweakSlider label="Mist density" value={t.mist} min={0} max={1.5} step={.1}
+                     onChange={(v) => setTweak('mist', v)} />
+        <TweakRadio label="Animation" value={
+                      t.intensity === 0 ? 'off' :
+                      t.intensity <= 0.5 ? 'subtle' : 'lush'
+                    }
+                    options={['off','subtle','lush']}
+                    onChange={(v) => setTweak('intensity', v === 'off' ? 0 : v === 'subtle' ? 0.5 : 1)} />
+        <TweakSection label="Mood" />
+        <TweakRadio label="Time of day" value={t.mood}
+                    options={['day','dusk','night']}
+                    onChange={(v) => setTweak('mood', v)} />
+        <TweakToggle label="Cinnabar accent" value={t.accent}
+                     onChange={(v) => setTweak('accent', v)} />
+        <TweakToggle label="Ink cursor trail" value={t.inkCursor}
+                     onChange={(v) => setTweak('inkCursor', v)} />
+      </TweaksPanel>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
