@@ -11,9 +11,16 @@ let _scrollHooked = false;
 function _hookScroll() {
   if (_scrollHooked) return;
   _scrollHooked = true;
+  let ticking = false;
   const onScroll = () => {
     _scrollY = window.scrollY || window.pageYOffset || 0;
-    _scrollListeners.forEach((cb) => cb(_scrollY));
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(() => {
+        _scrollListeners.forEach((cb) => cb(_scrollY));
+        ticking = false;
+      });
+    }
   };
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();

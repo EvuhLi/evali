@@ -11,14 +11,13 @@ function InkCursor({ enabled = true }) {
   const canvasRef = useR(null);
   useEff(() => {
     if (!enabled) {
-      // restore default cursor when disabled
       document.documentElement.style.cursor = '';
       document.body.style.cursor = '';
       return;
     }
-    // hide native cursor everywhere; brush trail replaces it
     document.documentElement.style.cursor = 'none';
     document.body.style.cursor = 'none';
+
     const c = canvasRef.current;
     const ctx = c.getContext('2d');
     let dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -34,92 +33,145 @@ function InkCursor({ enabled = true }) {
     resize();
     window.addEventListener('resize', resize);
 
-    // node = { x, y, w, life, born }
+    // trail nodes
     const nodes = [];
-    let lastX = null, lastY = null, lastT = 0;
+    let lastX = null, lastY = null;
+    const MAX_DOT_GAP = 8;
+
+    // spring-physics ink drop (always visible at cursor tip)
+    let targetX = 0, targetY = 0;
+    let dropX = 0, dropY = 0, dropVX = 0, dropVY = 0;
+    let dropVisible = false;
 
     const onMove = (e) => {
-      // suppress trail when over the studio canvas — let the user see the real brush there
       const el = e.target;
-      if (el && el.closest && el.closest('.studio-canvas, .studio-frame')) {
-        lastX = null; lastY = null;
-        return;
-      }
+      const inStudio = el && el.closest && el.closest('.studio-canvas, .studio-frame');
+      if (inStudio) { lastX = null; lastY = null; return; }
+
       const x = e.clientX, y = e.clientY;
       const t = performance.now();
-      let w = 8;
+      targetX = x; targetY = y;
+      if (!dropVisible) { dropX = x; dropY = y; dropVisible = true; }
+
       if (lastX !== null) {
-        const dx = x - lastX, dy = y - lastY, dt = Math.max(1, t - lastT);
-        const speed = Math.hypot(dx, dy) / dt; // px/ms
-        // slow = thick (real brush pressure), fast = thin
-        w = Math.max(1.2, 9 - speed * 6);
+        const dx = x - lastX, dy = y - lastY;
+        const dist = Math.hypot(dx, dy);
+        if (dist > MAX_DOT_GAP) {
+          const steps = Math.ceil(dist / MAX_DOT_GAP);
+          for (let i = 1; i < steps; i++) {
+            const f = i / steps;
+            nodes.push({ x: lastX + dx * f, y: lastY + dy * f, born: t });
+          }
+        }
       }
-      nodes.push({ x, y, w, born: t });
-      // limit
-      if (nodes.length > 220) nodes.splice(0, nodes.length - 220);
-      lastX = x; lastY = y; lastT = t;
+
+      nodes.push({ x, y, born: t });
+      if (nodes.length > 400) nodes.splice(0, nodes.length - 400);
+      lastX = x; lastY = y;
     };
-    window.addEventListener('mousemove', onMove);
     window.addEventListener('pointermove', onMove);
 
     const onTouch = (e) => {
       const t = e.touches && e.touches[0];
       if (!t) return;
-      onMove({ clientX: t.clientX, clientY: t.clientY });
+      onMove({ clientX: t.clientX, clientY: t.clientY, target: e.target });
     };
     window.addEventListener('touchmove', onTouch, { passive: true });
 
     let raf;
-    const TTL = 1400;
+    const TTL = 320;  // shorter trail
+    const MAX_R = 9;
+    const N_BLOB = 10; // perimeter points for organic shape
+
     const draw = () => {
       const now = performance.now();
-      // soft erase (fade existing pixels)
-      ctx.globalCompositeOperation = 'destination-out';
-      ctx.fillStyle = 'rgba(0,0,0,0.06)';
-      ctx.fillRect(0, 0, c.width / dpr, c.height / dpr);
-      ctx.globalCompositeOperation = 'source-over';
+      const t = now * 0.001; // seconds
+      ctx.clearRect(0, 0, c.width / dpr, c.height / dpr);
 
-      // cull old
       while (nodes.length && now - nodes[0].born > TTL) nodes.shift();
 
-      // draw stroke as a series of quadratic curves between consecutive nodes
+      // trail: continuous tapered stroke
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       for (let i = 1; i < nodes.length; i++) {
         const a = nodes[i - 1], b = nodes[i];
-        const ageA = (now - a.born) / TTL;
-        const ageB = (now - b.born) / TTL;
-        const alpha = (1 - (ageA + ageB) / 2) * 0.55;
-        if (alpha <= 0) continue;
-        const w = (a.w + b.w) / 2 * (1 - (ageA + ageB) / 2);
-        if (w < 0.3) continue;
-
-        const inkColor = getComputedStyle(document.documentElement)
-          .getPropertyValue('--ink-1').trim() || '#1b1d22';
-
-        ctx.strokeStyle = `rgba(27,29,34,${alpha.toFixed(3)})`;
+        const age = (now - b.born) / TTL;
+        const w = MAX_R * 2 * Math.pow(1 - age, 0.6);
+        if (w < 0.4) continue;
+        const alpha = (1 - age) * 0.9;
+        ctx.strokeStyle = `rgba(16,18,22,${alpha.toFixed(3)})`;
         ctx.lineWidth = w;
         ctx.beginPath();
         ctx.moveTo(a.x, a.y);
-        // smooth midpoint curve
         const next = nodes[i + 1];
         if (next) {
-          const mx = (b.x + next.x) / 2;
-          const my = (b.y + next.y) / 2;
-          ctx.quadraticCurveTo(b.x, b.y, mx, my);
+          ctx.quadraticCurveTo(b.x, b.y, (b.x + next.x) / 2, (b.y + next.y) / 2);
         } else {
           ctx.lineTo(b.x, b.y);
         }
         ctx.stroke();
+      }
 
-        // occasional ink fleck for texture
-        if (Math.random() < 0.04 && w > 2) {
-          ctx.fillStyle = `rgba(27,29,34,${(alpha*0.7).toFixed(3)})`;
-          ctx.beginPath();
-          ctx.arc(b.x + (Math.random()-.5)*w, b.y + (Math.random()-.5)*w,
-                  Math.random()*w*0.35, 0, Math.PI*2);
-          ctx.fill();
+      // organic ink drop
+      if (dropVisible) {
+        dropX = targetX;
+        dropY = targetY;
+
+        const speed = 0;
+        const baseR = 8;
+
+        // build organic perimeter: multi-frequency wobble on each point's radius
+        // slower wobble when moving (inertia), more expressive when still
+        const wobbleAmt = 0.13 + Math.max(0, 0.08 - speed * 0.02);
+        const pts = [];
+        for (let i = 0; i < N_BLOB; i++) {
+          const a = (i / N_BLOB) * Math.PI * 2;
+          const w = Math.sin(a * 2 + t * 2.2)  * wobbleAmt
+                  + Math.sin(a * 3 - t * 1.6)  * wobbleAmt * 0.6
+                  + Math.sin(a * 5 + t * 0.9)  * wobbleAmt * 0.3;
+          const r = baseR * (1 + w);
+          pts.push({ x: dropX + Math.cos(a) * r, y: dropY + Math.sin(a) * r });
         }
+
+        // smooth blob path via midpoint quadratic curves
+        const startMid = { x: (pts[N_BLOB-1].x + pts[0].x) / 2,
+                           y: (pts[N_BLOB-1].y + pts[0].y) / 2 };
+        ctx.beginPath();
+        ctx.moveTo(startMid.x, startMid.y);
+        for (let i = 0; i < N_BLOB; i++) {
+          const p = pts[i];
+          const pn = pts[(i + 1) % N_BLOB];
+          ctx.quadraticCurveTo(p.x, p.y, (p.x + pn.x) / 2, (p.y + pn.y) / 2);
+        }
+        ctx.closePath();
+
+        // dark ink body
+        ctx.fillStyle = 'rgba(14,16,20,0.94)';
+        ctx.fill();
+
+        // dark edge ring — ink concentrates at perimeter (re-use path)
+        const edgeGrad = ctx.createRadialGradient(
+          dropX, dropY, baseR * 0.45,
+          dropX, dropY, baseR * 1.15
+        );
+        edgeGrad.addColorStop(0, 'rgba(0,0,0,0)');
+        edgeGrad.addColorStop(1, 'rgba(0,0,0,0.38)');
+        ctx.fillStyle = edgeGrad;
+        ctx.fill();
+
+        // crisp perimeter stroke (the "ridge")
+        ctx.strokeStyle = 'rgba(4,6,10,0.55)';
+        ctx.lineWidth = 1.1;
+        ctx.stroke();
+
+        // specular crescent — glossy upper-left highlight
+        const hx = dropX - baseR * 0.26, hy = dropY - baseR * 0.30;
+        const hg = ctx.createRadialGradient(hx, hy, 0, hx, hy, baseR * 0.58);
+        hg.addColorStop(0,   'rgba(255,255,255,0.42)');
+        hg.addColorStop(0.45,'rgba(255,255,255,0.11)');
+        hg.addColorStop(1,   'rgba(255,255,255,0)');
+        ctx.fillStyle = hg;
+        ctx.fill();
       }
 
       raf = requestAnimationFrame(draw);
@@ -129,7 +181,6 @@ function InkCursor({ enabled = true }) {
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', resize);
-      window.removeEventListener('mousemove', onMove);
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('touchmove', onTouch);
       document.documentElement.style.cursor = '';
