@@ -16,14 +16,76 @@
     letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.6;
     pointer-events: none; text-align: center; z-index: 3;
   }
+  .cp-text {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center; pointer-events: none; z-index: 10;
+    opacity: 0; transition: opacity 0.6s ease;
+    color: #1a1410; font-family: "Georgia", serif;
+  }
+  .cp-text h2 {
+    font-size: 22px; font-weight: normal;
+    letter-spacing: 0.45em; text-transform: uppercase; margin-bottom: 10px;
+  }
+  .cp-text p {
+    font-size: 12px; letter-spacing: 0.2em;
+    text-transform: uppercase; opacity: 0.5;
+  }
+  #progress-bar {
+    position: fixed; right: 28px; top: 50%;
+    transform: translateY(-50%);
+    height: 55vh; width: 1px;
+    background: rgba(26,20,16,0.12); z-index: 20;
+  }
+  #progress-fill {
+    position: absolute; bottom: 0; left: 0;
+    width: 100%; height: 0%;
+    background: rgba(26,20,16,0.55);
+  }
+  .cp-marker {
+    position: absolute; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 5px; height: 5px; border-radius: 50%;
+    background: rgba(26,20,16,0.22);
+    cursor: pointer;
+    transition: background 0.3s, transform 0.3s;
+  }
+  .cp-marker:hover, .cp-marker.active {
+    background: rgba(26,20,16,0.75);
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+  .cp-label {
+    position: absolute; right: calc(100% + 10px); top: 50%;
+    transform: translateY(-50%);
+    font-family: "Georgia", serif; font-size: 9px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(26,20,16,0.40); white-space: nowrap;
+    transition: color 0.3s;
+  }
+  .cp-marker.active .cp-label { color: rgba(26,20,16,0.8); }
 </style>
 </head>
 <body>
 <div id="scroll-space"></div>
-<div id="info">Ascend</div>
+
+<div class="cp-text" id="cp1"><h2>About</h2><p>Where I've worked</p></div>
+<div class="cp-text" id="cp2"><h2>Experience</h2><p>Things I've built</p></div>
+<div class="cp-text" id="cp3"><h2>Projects</h2><p>Where I've studied</p></div>
+<div class="cp-text" id="cp4"><h2>Education</h2><p>The view from here</p></div>
+
+<div id="progress-bar">
+  <div id="progress-fill"></div>
+  <div class="cp-marker active" data-target="0.00" style="bottom:0%"><span class="cp-label">About</span></div>
+  <div class="cp-marker" data-target="0.35" style="bottom:33%"><span class="cp-label">Experience</span></div>
+  <div class="cp-marker" data-target="0.65" style="bottom:66%"><span class="cp-label">Projects</span></div>
+  <div class="cp-marker" data-target="1" style="bottom:100%"><span class="cp-label">Education</span></div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
+history.scrollRestoration = 'manual';
+window.scrollTo(0, 0);
+
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xf7f3eb);
 scene.fog = new THREE.FogExp2(0xf7f3eb, 0.04);
@@ -384,15 +446,72 @@ const camPath = new THREE.CatmullRomCurve3([
   new THREE.Vector3(15, 3, 15), new THREE.Vector3(-12, 12, 12), new THREE.Vector3(-15, 18, -8), new THREE.Vector3(8, 22, -5)
 ]);
 
+// Each checkpoint: [rawStart, rawEnd, elementId]
+// The dwell zones consume scroll without moving the camera much.
+// Each dwell zone is 0.10 wide, gaps are 0.20 wide — perfectly even spacing
+const CHECKPOINTS = [
+  [-0.5, 0.10, 'cp1'],
+  [0.30, 0.40, 'cp2'],
+  [0.60, 0.70, 'cp3'],
+  [0.90, 1.5, 'cp4'],
+];
+
+// Piecewise linear: raw scroll → camera progress (flat segments = slow zones)
+function remapScroll(raw) {
+  const segs = [
+    [0.00, 0.10,  0.00, 0.02],  // cp1 dwell
+    [0.10, 0.30,  0.02, 0.32],  // travel to cp2  (0.30 camera)
+    [0.30, 0.40,  0.32, 0.34],  // cp2 dwell
+    [0.40, 0.60,  0.34, 0.64],  // travel to cp3  (0.30 camera)
+    [0.60, 0.70,  0.64, 0.66],  // cp3 dwell
+    [0.70, 0.90,  0.66, 0.96],  // travel to cp4  (0.30 camera)
+    [0.90, 1.00,  0.96, 0.99],  // cp4 dwell
+  ];
+  for (const [r0, r1, c0, c1] of segs) {
+    if (raw <= r1) return c0 + ((raw - r0) / (r1 - r0)) * (c1 - c0);
+  }
+  return 0.99;
+}
+
+function updateCheckpoints(raw) {
+  CHECKPOINTS.forEach(([r0, r1, id]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    let a = 0;
+    if (raw >= r0 && raw <= r1) {
+      const t = (raw - r0) / (r1 - r0);
+      a = t < 0.25 ? t / 0.25 : t > 0.75 ? (1 - t) / 0.25 : 1;
+    }
+    el.style.opacity = a;
+  });
+}
+
+function updateProgressBar(raw) {
+  document.getElementById('progress-fill').style.height = (raw * 100) + '%';
+  document.querySelectorAll('.cp-marker').forEach(m => {
+    const t = parseFloat(m.dataset.target);
+    m.classList.toggle('active', raw >= t && raw < t + 0.10);
+  });
+}
+document.querySelectorAll('.cp-marker').forEach(m => {
+  m.addEventListener('click', () => {
+    const t = parseFloat(m.dataset.target);
+    window.scrollTo({ top: t * (document.body.scrollHeight - window.innerHeight), behavior: 'smooth' });
+  });
+});
+updateProgressBar(0);
+
 let scrollProgress = 0;
 window.addEventListener('scroll', () => {
   scrollProgress = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+  updateCheckpoints(scrollProgress);
+  updateProgressBar(scrollProgress);
 });
 
 function animate() {
   requestAnimationFrame(animate);
   const clock = performance.now() * 0.001;
-  const p = Math.min(Math.max(scrollProgress, 0), 0.99);
+  const p = Math.min(Math.max(remapScroll(scrollProgress), 0), 0.99);
   camera.position.lerp(camPath.getPoint(p), 0.06);
   camera.lookAt(0, p * 10, 0);
 
