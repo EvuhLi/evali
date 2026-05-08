@@ -57,10 +57,18 @@ function openModal(item) {
   modalInner.innerHTML = html;
   modalOverlay.classList.add('open');
 }
-function closeModal() { modalOverlay.classList.remove('open'); }
+function closeModal() { modalOverlay.classList.remove('open', 'art-mode'); }
 
 document.querySelectorAll('.cp-item').forEach(item => {
   item.addEventListener('click', (e) => { e.stopPropagation(); openModal(item); });
+});
+document.querySelectorAll('.art-frame').forEach(frame => {
+  frame.addEventListener('click', e => {
+    e.stopPropagation();
+    const img = frame.querySelector('img');
+    modalInner.innerHTML = `<img src="${img.src}" style="max-width:85vw;max-height:82vh;width:auto;height:auto;display:block;">`;
+    modalOverlay.classList.add('open', 'art-mode');
+  });
 });
 modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
 document.getElementById('modal-close').addEventListener('click', closeModal);
