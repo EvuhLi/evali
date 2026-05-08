@@ -415,13 +415,16 @@ const camPath = new THREE.CatmullRomCurve3([
 
 function remapScroll(raw) {
   const segs = [
-    [0.00, 0.10, 0.00, 0.02],
-    [0.10, 0.30, 0.02, 0.32],
-    [0.30, 0.40, 0.32, 0.34],
-    [0.40, 0.60, 0.34, 0.64],
-    [0.60, 0.70, 0.64, 0.66],
-    [0.70, 0.90, 0.66, 0.96],
-    [0.90, 1.00, 0.96, 0.99],
+    [0.00, 0.02, 0.00, 0.10],  // arrive at About
+    [0.02, 0.18, 0.10, 0.11],  // pause — About
+    [0.18, 0.22, 0.11, 0.30],  // move to Art
+    [0.22, 0.38, 0.30, 0.31],  // pause — Art
+    [0.38, 0.42, 0.31, 0.50],  // move to Projects
+    [0.42, 0.58, 0.50, 0.51],  // pause — Projects
+    [0.58, 0.62, 0.51, 0.70],  // move to Experience
+    [0.62, 0.78, 0.70, 0.71],  // pause — Experience
+    [0.78, 0.82, 0.71, 0.90],  // move to Connect
+    [0.82, 1.00, 0.90, 0.99],  // pause — Connect
   ];
   for (const [r0, r1, c0, c1] of segs) {
     if (raw <= r1) return c0 + ((raw - r0) / (r1 - r0)) * (c1 - c0);
@@ -429,31 +432,23 @@ function remapScroll(raw) {
   return 0.99;
 }
 
-const ANCHORS = [
-  { id: 'cp1',    pos: new THREE.Vector3(ANCHOR_DEFAULTS['cp1'].x,    ANCHOR_DEFAULTS['cp1'].y,    ANCHOR_DEFAULTS['cp1'].z)    },
-  { id: 'cp-art', pos: new THREE.Vector3(ANCHOR_DEFAULTS['cp-art'].x, ANCHOR_DEFAULTS['cp-art'].y, ANCHOR_DEFAULTS['cp-art'].z) },
-  { id: 'cp2',    pos: new THREE.Vector3(ANCHOR_DEFAULTS['cp2'].x,    ANCHOR_DEFAULTS['cp2'].y,    ANCHOR_DEFAULTS['cp2'].z)    },
-  { id: 'cp3',    pos: new THREE.Vector3(ANCHOR_DEFAULTS['cp3'].x,    ANCHOR_DEFAULTS['cp3'].y,    ANCHOR_DEFAULTS['cp3'].z)    },
-  { id: 'cp4',    pos: new THREE.Vector3(ANCHOR_DEFAULTS['cp4'].x,    ANCHOR_DEFAULTS['cp4'].y,    ANCHOR_DEFAULTS['cp4'].z)    },
-  { id: 'cp2b',   pos: new THREE.Vector3(ANCHOR_DEFAULTS['cp2b'].x,   ANCHOR_DEFAULTS['cp2b'].y,   ANCHOR_DEFAULTS['cp2b'].z)   },
-  { id: 'cp3b',   pos: new THREE.Vector3(ANCHOR_DEFAULTS['cp3b'].x,   ANCHOR_DEFAULTS['cp3b'].y,   ANCHOR_DEFAULTS['cp3b'].z)   },
-];
+const ANCHORS = ['cp1', 'cp-art', 'cp2', 'cp3', 'cp4', 'cp2b', 'cp3b'];
 const ANCHOR_ZONES = {
-  'cp1':    [-0.1, 0.18],
-  'cp-art': [0.18, 0.36],
-  'cp3':    [0.36, 0.58],
-  'cp3b':   [0.36, 0.58],
-  'cp2':    [0.58, 0.80],
-  'cp2b':   [0.58, 0.80],
-  'cp4':    [0.80, 1.01],
+  'cp1':    [-0.1, 0.20],
+  'cp-art': [0.20, 0.40],
+  'cp3':    [0.40, 0.60],
+  'cp3b':   [0.40, 0.60],
+  'cp2':    [0.60, 0.80],
+  'cp2b':   [0.60, 0.80],
+  'cp4':    [0.80, 1.1],
 };
 function updateAnchors() {
   const raw = scrollProgress;
   const fade = 0.03;
-  ANCHORS.forEach(a => {
-    const el = document.getElementById(a.id);
+  ANCHORS.forEach(id => {
+    const el = document.getElementById(id);
     if (!el) return;
-    const zone = ANCHOR_ZONES[a.id];
+    const zone = ANCHOR_ZONES[id];
     if (!zone) { el.style.opacity = '0'; return; }
     const [start, end] = zone;
     let opacity = 0;

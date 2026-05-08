@@ -1,7 +1,7 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { background: #f7f3eb; overflow-x: hidden; font-family: "Georgia", serif; }
 canvas { display: block; position: fixed; top: 0; left: 0; width: 100vw !important; height: 100vh !important; z-index: 0; }
-#scroll-space { height: 400vh; }
+#scroll-space { height: 700vh; }
 
 #info {
   position: fixed; bottom: 40px; left: 50%;
@@ -31,7 +31,6 @@ canvas { display: block; position: fixed; top: 0; left: 0; width: 100vw !importa
     0 0 16px rgba(247,243,235,0.98),
     0 2px 10px rgba(247,243,235,0.9);
 }
-#checkpoint-title.visible { opacity: 1; }
 
 /* ── PLAIN TEXT (About & Education) ── */
 .cp-text:has(h2) {

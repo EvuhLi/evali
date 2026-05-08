@@ -1,30 +1,46 @@
 // ── PROGRESS BAR ──
+// maps scroll progress to bar display progress so dots align with fill
+function scrollToDisplay(raw) {
+  const pts = [[0.00, 0.00], [0.30, 0.25], [0.50, 0.50], [0.70, 0.75], [1.00, 1.00]];
+  for (let i = 1; i < pts.length; i++) {
+    const [r0, d0] = pts[i-1], [r1, d1] = pts[i];
+    if (raw <= r1) return d0 + (raw - r0) / (r1 - r0) * (d1 - d0);
+  }
+  return 1;
+}
+const _markers = [...document.querySelectorAll('.cp-marker')];
+const _markerPos = _markers.map(m => parseFloat(m.style.left) / 100);
 function updateProgressBar(raw) {
-  document.getElementById('progress-fill').style.width = (raw * 100) + '%';
-  document.querySelectorAll('.cp-marker').forEach(m => {
-    const t = parseFloat(m.dataset.target);
-    m.classList.toggle('active', raw >= t && raw < t + 0.10);
+  const display = scrollToDisplay(raw);
+  document.getElementById('progress-fill').style.width = (display * 100) + '%';
+  _markers.forEach((m, i) => {
+    const lo = i === 0 ? -Infinity : (_markerPos[i-1] + _markerPos[i]) / 2;
+    const hi = i === _markers.length - 1 ? Infinity : (_markerPos[i] + _markerPos[i+1]) / 2;
+    m.classList.toggle('active', display >= lo && display < hi);
   });
 }
 
 // ── CHECKPOINT TITLE ──
 const TITLE_ZONES = [
-  { start: 0,    end: 0.18, text: 'About' },
-  { start: 0.18, end: 0.36, text: 'Art' },
-  { start: 0.36, end: 0.58, text: 'Projects' },
-  { start: 0.58, end: 0.80, text: 'Experience' },
-  { start: 0.80, end: 1.01, text: 'Connect' },
+  { start: -0.1, end: 0.20, text: 'About' },
+  { start: 0.20, end: 0.40, text: 'Art' },
+  { start: 0.40, end: 0.60, text: 'Projects' },
+  { start: 0.60, end: 0.80, text: 'Experience' },
+  { start: 0.80, end: 1.10, text: 'Connect' },
 ];
 const titleEl = document.getElementById('checkpoint-title');
 let _lastTitle = '';
 function updateCheckpointTitle(raw) {
+  const fade = 0.08;
   const zone = TITLE_ZONES.find(z => raw >= z.start && raw < z.end);
-  const text = zone ? zone.text : '';
-  if (text !== _lastTitle) {
-    _lastTitle = text;
-    titleEl.textContent = text;
-    titleEl.classList.toggle('visible', !!text);
+  if (!zone) { titleEl.style.opacity = '0'; return; }
+  if (zone.text !== _lastTitle) {
+    _lastTitle = zone.text;
+    titleEl.textContent = zone.text;
   }
+  const fadeIn  = Math.min((raw - zone.start) / fade, 1);
+  const fadeOut = Math.min((zone.end - raw) / fade, 1);
+  titleEl.style.opacity = Math.min(fadeIn, fadeOut).toFixed(3);
 }
 
 // ── MODAL ──
@@ -68,62 +84,6 @@ window.addEventListener('scroll', () => {
   updateCheckpointTitle(scrollProgress);
 });
 
-// ── TWEAKS PANEL ──
-(function () {
-  const panel    = document.getElementById('tweaks-panel');
-  const body     = document.getElementById('tw-body');
-  const closeBtn = document.getElementById('tw-close');
-  const labels   = { cp1: 'About', 'cp-art': 'Art', cp2: 'Experience A', cp2b: 'Experience B', cp3: 'Projects A', cp3b: 'Projects B', cp4: 'Connect' };
-  const axes     = [
-    { k: 'x', min: -25, max: 25 },
-    { k: 'y', min: -5,  max: 28 },
-    { k: 'z', min: -25, max: 25 },
-  ];
-
-  Object.keys(labels).forEach((id, idx) => {
-    const group = document.createElement('div');
-    group.className = 'tw-group';
-    group.innerHTML = `<h4>${idx + 1}. ${labels[id]}</h4>`;
-    axes.forEach(({ k, min, max }) => {
-      const row = document.createElement('div');
-      row.className = 'tw-row';
-      const v = ANCHOR_DEFAULTS[id][k];
-      row.innerHTML = `
-        <label>${k}</label>
-        <input type="range" min="${min}" max="${max}" step="0.5"
-               value="${v}" data-id="${id}" data-axis="${k}">
-        <span class="tw-val" data-val="${id}-${k}">${v.toFixed(1)}</span>`;
-      group.appendChild(row);
-    });
-    body.appendChild(group);
-  });
-
-  function applyEdit(id, axis, val) {
-    const anchor = ANCHORS.find(a => a.id === id);
-    if (anchor) anchor.pos[axis] = val;
-    ANCHOR_DEFAULTS[id][axis] = val;
-    const valEl = body.querySelector(`[data-val="${id}-${axis}"]`);
-    if (valEl) valEl.textContent = Number(val).toFixed(1);
-  }
-
-  body.addEventListener('input', (e) => {
-    const t = e.target;
-    if (t.tagName !== 'INPUT') return;
-    applyEdit(t.dataset.id, t.dataset.axis, parseFloat(t.value));
-    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: JSON.parse(JSON.stringify(ANCHOR_DEFAULTS)) }, '*');
-  });
-
-  window.addEventListener('message', (e) => {
-    if (!e.data || typeof e.data !== 'object') return;
-    if (e.data.type === '__activate_edit_mode')   panel.classList.add('open');
-    if (e.data.type === '__deactivate_edit_mode')  panel.classList.remove('open');
-  });
-  closeBtn.addEventListener('click', () => {
-    panel.classList.remove('open');
-    window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*');
-  });
-  window.parent.postMessage({ type: '__edit_mode_available' }, '*');
-})();
 
 // ── AUDIO ──
 (function () {

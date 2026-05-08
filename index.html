@@ -29,6 +29,17 @@
 </div>
 
 <div class="cp-text" id="cp-art">
+  <div class="cp-item">
+    <div class="cp-role">Software Engineering Intern · CTAT</div>
+    <div class="cp-place">Jan 2026 – Present · Vue, TypeScript, JavaScript, HTML, CSS · Git, Figma</div>
+    <div class="cp-detail">
+      <ul>
+        <li>Designed and shipped 20+ features end-to-end for CTAT, a web-based intelligent tutoring system used in university research environments.</li>
+        <li>Refactored the HTML lesson editor in TypeScript to improve robustness and accessibility for 1,000+ users.</li>
+        <li>Drove design reviews in Figma and managed feature work through a Git/GitHub PR workflow with the research engineering team.</li>
+      </ul>
+    </div>
+  </div>
 </div>
 
 <div class="cp-text" id="cp2">
@@ -161,17 +172,13 @@
 <div id="progress-bar">
   <div id="progress-fill"></div>
   <div class="cp-marker active" data-target="0.00" style="left:0%"><span class="cp-label">About</span></div>
-  <div class="cp-marker" data-target="0.22" style="left:25%"><span class="cp-label">Art</span></div>
-  <div class="cp-marker" data-target="0.44" style="left:50%"><span class="cp-label">Projects</span></div>
-  <div class="cp-marker" data-target="0.66" style="left:75%"><span class="cp-label">Experience</span></div>
-  <div class="cp-marker" data-target="1" style="left:100%"><span class="cp-label">Connect</span></div>
+  <div class="cp-marker" data-target="0.30" style="left:25%"><span class="cp-label">Art</span></div>
+  <div class="cp-marker" data-target="0.50" style="left:50%"><span class="cp-label">Projects</span></div>
+  <div class="cp-marker" data-target="0.70" style="left:75%"><span class="cp-label">Experience</span></div>
+  <div class="cp-marker" data-target="1.00" style="left:100%"><span class="cp-label">Connect</span></div>
 </div>
 
-<!-- Tweaks panel -->
-<div id="tweaks-panel">
-  <h3>Tweaks · Anchor Positions <button id="tw-close" title="Close">×</button></h3>
-  <div id="tw-body"></div>
-</div>
+
 
 <!-- Audio -->
 <!-- <audio id="bg-music" src="nastelbom-asian-asian-china-chinese-music-501705.mp3" loop preload="auto"></audio> -->
@@ -184,19 +191,7 @@
   </svg>
 </button>
 
-<!-- Scripts: ANCHOR_DEFAULTS must be inline so both scene.js and ui.js can read it -->
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
-<script>
-const ANCHOR_DEFAULTS = /*EDITMODE-BEGIN*/{
-  "cp1":    { "x":  0, "y":  4.5, "z":  2.5 },
-  "cp-art": { "x":  0,   "y":  7,   "z":  8   },
-  "cp2":    { "x": -6.5, "y": 10,   "z":  9   },
-  "cp3":    { "x": -12,  "y": 16,   "z": -5   },
-  "cp4":    { "x":  6,   "y": 20.5, "z": -4.5 },
-  "cp2b":   { "x":  9,   "y": 10,   "z": -7   },
-  "cp3b":   { "x": 11,   "y": 16,   "z":  5   }
-}/*EDITMODE-END*/;
-</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="scene.js"></script>
