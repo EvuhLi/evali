@@ -458,6 +458,9 @@ function updateAnchors() {
       opacity = Math.min(fadeIn, fadeOut);
     }
     el.style.opacity = opacity.toFixed(3);
+    el.querySelectorAll('.cp-item').forEach(item => {
+      item.style.pointerEvents = opacity > 0 ? '' : 'none';
+    });
   });
 }
 
