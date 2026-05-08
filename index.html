@@ -27,9 +27,17 @@
     font-size: 22px; font-weight: normal;
     letter-spacing: 0.45em; text-transform: uppercase; margin-bottom: 10px;
   }
+  .cp-text { max-width: 520px; }
   .cp-text p {
-    font-size: 12px; letter-spacing: 0.2em;
-    text-transform: uppercase; opacity: 0.5;
+    font-size: 11px; letter-spacing: 0.18em;
+    text-transform: uppercase; opacity: 0.5; line-height: 1.9;
+  }
+  .cp-item { margin-top: 14px; }
+  .cp-item .cp-role {
+    font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; opacity: 0.75;
+  }
+  .cp-item .cp-place {
+    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.4; margin-top: 3px;
   }
   #progress-bar {
     position: fixed; right: 28px; top: 50%;
@@ -63,15 +71,71 @@
     transition: color 0.3s;
   }
   .cp-marker.active .cp-label { color: rgba(26,20,16,0.8); }
+  #mute-btn {
+    position: fixed; bottom: 28px; right: 28px;
+    z-index: 20; cursor: pointer;
+    background: none; border: none; padding: 0;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0.45; transition: opacity 0.3s;
+  }
+  #mute-btn:hover { opacity: 0.85; }
+  #mute-btn svg { width: 18px; height: 18px; fill: rgba(26,20,16,0.9); }
 </style>
 </head>
 <body>
 <div id="scroll-space"></div>
 
-<div class="cp-text" id="cp1"><h2>About</h2><p>Where I've worked</p></div>
-<div class="cp-text" id="cp2"><h2>Experience</h2><p>Things I've built</p></div>
-<div class="cp-text" id="cp3"><h2>Projects</h2><p>Where I've studied</p></div>
-<div class="cp-text" id="cp4"><h2>Education</h2><p>The view from here</p></div>
+<div class="cp-text" id="cp1">
+  <h2>Evangeline Li</h2>
+  <p>Carnegie Mellon University · Pittsburgh, PA</p>
+  <p>B.S. Computer Science &amp; Information Systems · GPA 3.77 · Dean's List</p>
+  <p>lievayifan@gmail.com · github.com/EvuhLi</p>
+</div>
+
+<div class="cp-text" id="cp2">
+  <h2>Experience</h2>
+  <div class="cp-item">
+    <div class="cp-role">Software Engineering Intern · CTAT</div>
+    <div class="cp-place">Jan 2026 – Present · Vue, JavaScript, HTML, CSS</div>
+  </div>
+  <div class="cp-item">
+    <div class="cp-role">Teaching Assistant · 15-122 CMU</div>
+    <div class="cp-place">Jan 2026 – Present · Data Structures & Algorithms, C/C0</div>
+  </div>
+  <div class="cp-item">
+    <div class="cp-role">Resident Assistant · CMU Housing</div>
+    <div class="cp-place">Jan 2026 – Present</div>
+  </div>
+  <div class="cp-item">
+    <div class="cp-role">Lead Sensei · Code Ninjas</div>
+    <div class="cp-place">May 2024 – Aug 2025 · JavaScript, HTML, CSS</div>
+  </div>
+</div>
+
+<div class="cp-text" id="cp3">
+  <h2>Projects</h2>
+  <div class="cp-item">
+    <div class="cp-role">Loom · Hacking4Humanity Top Finisher</div>
+    <div class="cp-place">React/Vite · Node.js/Express · MongoDB · Python AI/ML · March 2026</div>
+  </div>
+  <div class="cp-item">
+    <div class="cp-role">Minecraft Live</div>
+    <div class="cp-place">Python · MediaPipe · WebSockets · Neural Network Inference · Feb 2026</div>
+  </div>
+  <div class="cp-item">
+    <div class="cp-role">Sparrow</div>
+    <div class="cp-place">MongoDB · React · HTML/CSS · Adobe Illustrator · Aug 2024</div>
+  </div>
+</div>
+
+<div class="cp-text" id="cp4">
+  <h2>Education</h2>
+  <p>Carnegie Mellon University · Aug 2025 – Dec 2028</p>
+  <p>B.S. Computer Science &amp; Information Systems · GPA 3.77 · Dean's List</p>
+  <p>Data Structures · Discrete Math · Linear Algebra · Software Design · Databases</p>
+  <p>AWS Cloud Practitioner · Hacking4Humanity Winner · National Merit Finalist</p>
+</div>
 
 <div id="progress-bar">
   <div id="progress-fill"></div>
@@ -84,7 +148,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 history.scrollRestoration = 'manual';
-window.scrollTo(0, 0);
+window.scrollTo(100, 100);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xf7f3eb);
@@ -289,6 +353,8 @@ createBirdCluster(4, 0, 2); createBirdCluster(-5, -1, 4);
 // far-ring clusters — positions scaled from far bgPlacements × 0.62, heightOffset=10 to float near bg peaks
 
 // --- ASSET LOADER ---
+let trail = null;
+const TRAIL_N = 120;
 const loader = new THREE.TextureLoader();
 loader.load(HM_FILE, (heightTex) => {
   const DISP = 20.0;
@@ -440,6 +506,32 @@ loader.load(HM_FILE, (heightTex) => {
       }
     }
   }
+
+  // --- DOTTED TRAIL ---
+  const trailPos = new Float32Array(TRAIL_N * 3);
+  for (let i = 0; i < TRAIL_N; i++) {
+    const f = i / (TRAIL_N - 1);
+    // UV path: start near front-right base (0.76, 0.76), end near peak (0.50, 0.48)
+    const tu = 0.76 - f * 0.26;
+    const tv = 0.76 - f * 0.28;
+    const col = Math.min(Math.floor(tu * 127), 127);
+    const row = Math.min(Math.floor(tv * 127), 127);
+    const h = data[(row * 128 + col) * 4] / 255;
+    trailPos[i * 3 + 0] = (tu - 0.5) * 24;
+    trailPos[i * 3 + 1] = h * DISP - 4 + 0.25; // slightly above surface
+    trailPos[i * 3 + 2] = (tv - 0.5) * 24;
+  }
+  const trailGeo = new THREE.BufferGeometry();
+  trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos, 3));
+  trailGeo.setDrawRange(0, 0);
+  const trailMat = new THREE.LineDashedMaterial({
+    color: 0x1a1410, dashSize: 0.22, gapSize: 0.18,
+    opacity: 0.55, transparent: true,
+  });
+  trail = new THREE.Line(trailGeo, trailMat);
+  trail.computeLineDistances();
+  trail.renderOrder = 998;
+  scene.add(trail);
 });
 
 const camPath = new THREE.CatmullRomCurve3([
@@ -515,6 +607,8 @@ function animate() {
   camera.position.lerp(camPath.getPoint(p), 0.06);
   camera.lookAt(0, p * 10, 0);
 
+  if (trail) trail.geometry.setDrawRange(0, Math.max(2, Math.floor(scrollProgress * (TRAIL_N + 1))));
+
   birdClusters.forEach(cluster => {
     cluster.children.forEach(s => {
       const flap = Math.sin(clock * s.userData.speed * 8.0 + s.userData.phase);
@@ -529,6 +623,49 @@ animate();
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+
+<audio id="bg-music" src="nastelbom-asian-asian-china-chinese-music-501705.mp3" loop preload="auto"></audio>
+
+<button id="mute-btn" title="Toggle music">
+  <!-- speaker icon (unmuted) -->
+  <svg id="icon-sound" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+  </svg>
+  <!-- muted icon -->
+  <svg id="icon-mute" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:none">
+    <path d="M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06A8.99 8.99 0 0 0 17.73 19l2 2L21 19.73l-18-18zM12 4L9.91 6.09 12 8.18V4z"/>
+  </svg>
+</button>
+
+<script>
+const audio = document.getElementById('bg-music');
+const btn = document.getElementById('mute-btn');
+const iconSound = document.getElementById('icon-sound');
+const iconMute = document.getElementById('icon-mute');
+let muted = false;
+
+audio.volume = 0.05;
+
+// Browsers block autoplay until a user gesture — start on first interaction
+const startAudio = () => {
+  audio.play().catch(() => {});
+  document.removeEventListener('click', startAudio);
+  document.removeEventListener('scroll', startAudio);
+  document.removeEventListener('keydown', startAudio);
+};
+document.addEventListener('click', startAudio);
+document.addEventListener('scroll', startAudio);
+document.addEventListener('keydown', startAudio);
+
+btn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  muted = !muted;
+  audio.muted = muted;
+  iconSound.style.display = muted ? 'none' : '';
+  iconMute.style.display = muted ? '' : 'none';
+  if (!muted) audio.play().catch(() => {});
 });
 </script>
 </body>
