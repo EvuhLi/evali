@@ -2,297 +2,25 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Ink Mountain - Precise Backgrounds</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #f7f3eb; overflow-x: hidden; font-family: "Georgia", serif; }
-  canvas { display: block; position: fixed; top: 0; left: 0; width: 100vw !important; height: 100vh !important; z-index: 0; }
-  #scroll-space { height: 400vh; }
-
-  #info {
-    position: fixed; bottom: 40px; left: 50%;
-    transform: translateX(-50%);
-    color: #111; font-family: "Georgia", serif; font-size: 13px;
-    letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.6;
-    pointer-events: none; text-align: center; z-index: 3;
-  }
-
-  /* Content panels — anchored to right column on a paper card so they
-     sit clear of the central mountain mass and stay legible. */
-  .cp-text {
-    position: fixed;
-    top: 0; left: 0; right: auto;
-    transform: translate(-50%, -50%);
-    text-align: left;
-    pointer-events: none;
-    z-index: 10;
-    opacity: 0;
-    transition: opacity 0.35s ease;
-    color: #1a1410;
-    font-family: "Georgia", serif;
-    width: 360px; max-width: 34vw;
-    padding: 0 0 0 18px;
-    background: none;
-    border: none;
-    box-shadow: none;
-    text-shadow:
-      0 0 8px rgba(247,243,235,0.85),
-      0 0 2px rgba(247,243,235,0.95);
-    will-change: transform, opacity;
-  }
-  .cp-text::before {
-    content: "";
-    position: absolute; top: 6px; bottom: 6px; left: 0;
-    width: 1px; background: #B22222; opacity: 0.7;
-  }
-  .cp-text h2 {
-    font-size: 26px;
-    font-weight: 600;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    margin-bottom: 18px;
-    color: #1a1410;
-    position: relative;
-    padding-bottom: 14px;
-  }
-  .cp-text h2::after {
-    content: "";
-    position: absolute; left: 0; bottom: 0;
-    width: 36px; height: 1px;
-    background: rgba(26,20,16,0.55);
-  }
-  .cp-text p {
-    font-size: 15px;
-    letter-spacing: 0.02em;
-    text-transform: none;
-    opacity: 0.95;
-    line-height: 1.65;
-    margin-top: 6px;
-    font-weight: 500;
-  }
-  .cp-item { margin-top: 16px; }
-  .cp-item .cp-role {
-    font-size: 16px; letter-spacing: 0.03em;
-    text-transform: none; opacity: 1;
-    font-weight: 700;
-    color: #1a1410;
-  }
-  .cp-item .cp-place {
-    font-size: 13px;
-    letter-spacing: 0.04em;
-    text-transform: none;
-    font-style: italic;
-    opacity: 0.8;
-    margin-top: 4px;
-    line-height: 1.55;
-    font-weight: 500;
-  }
-  .cp-tag {
-    font-style: normal;
-    font-weight: 700;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    font-size: 12px;
-    color: #B22222;
-    margin-right: 6px;
-  }
-  .cp-links {
-    pointer-events: auto;
-    margin-top: 14px !important;
-  }
-  .cp-links a {
-    pointer-events: auto;
-    color: #1a1410;
-    text-decoration: none;
-    border-bottom: 1px solid rgba(178,34,34,0.55);
-    padding-bottom: 1px;
-    transition: color 0.25s ease, border-color 0.25s ease;
-  }
-  .cp-links a:hover {
-    color: #B22222;
-    border-bottom-color: #B22222;
-  }
-  .cp-links .cp-sep {
-    opacity: 0.4;
-    margin: 0 8px;
-  }
-  /* Expandable items — only the title row is clickable */
-  .cp-text { pointer-events: none; }
-  .cp-row {
-    pointer-events: auto;
-    cursor: pointer;
-    position: relative;
-    padding-right: 24px;
-    transition: color 0.25s ease;
-  }
-  .cp-row::after {
-    content: "+";
-    position: absolute; top: -2px; right: 0;
-    font-family: "Georgia", serif;
-    font-size: 22px; line-height: 1; font-weight: 700;
-    color: #B22222; opacity: 0.95;
-    transition: transform 0.25s ease, opacity 0.25s ease, color 0.25s ease;
-  }
-  .cp-row:hover::after { transform: scale(1.15); }
-  .cp-item.open .cp-row::after {
-    content: "−"; opacity: 1; color: #B22222;
-  }
-  .cp-item.open .cp-role { color: #B22222; }
-  .cp-detail {
-    pointer-events: auto;
-    overflow: hidden;
-    max-height: 0;
-    opacity: 0;
-    transition: max-height 0.45s ease, opacity 0.3s ease, margin-top 0.3s ease;
-    margin-top: 0;
-  }
-  .cp-item.open .cp-detail {
-    max-height: 300px;
-    opacity: 1;
-    margin-top: 8px;
-  }
-  .cp-detail ul {
-    list-style: none; padding: 0; margin: 0;
-  }
-  .cp-detail li {
-    font-size: 14px;
-    line-height: 1.6;
-    margin: 8px 0;
-    padding-left: 14px;
-    position: relative;
-    opacity: 0.95;
-    letter-spacing: 0.01em;
-    font-weight: 500;
-  }
-  .cp-detail li::before {
-    content: "";
-    position: absolute; left: 0; top: 8px;
-    width: 5px; height: 1px;
-    background: #B22222; opacity: 0.7;
-  }
-  .cp-detail li.cp-link-li {
-    list-style: none; padding-left: 0; margin-top: 12px;
-  }
-  .cp-detail li.cp-link-li::before { display: none; }
-  .cp-detail li.cp-link-li a {
-    pointer-events: auto;
-    color: #B22222;
-    text-decoration: none;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    font-size: 13px;
-    border-bottom: 1px solid rgba(178,34,34,0.4);
-    padding-bottom: 1px;
-    transition: border-color 0.25s ease, opacity 0.25s ease;
-  }
-  .cp-detail li.cp-link-li a:hover {
-    border-bottom-color: #B22222;
-  }
-  #progress-bar {
-    position: fixed; left: 38px; top: 50%;
-    transform: translateY(-50%);
-    height: 55vh; width: 1px;
-    background: rgba(26,20,16,0.18); z-index: 20;
-  }
-  #progress-fill {
-    position: absolute; bottom: 0; left: 0;
-    width: 100%; height: 0%;
-    background: #B22222;
-    opacity: 0.85;
-  }
-  .cp-marker {
-    position: absolute; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 7px; height: 7px; border-radius: 50%;
-    background: rgba(26,20,16,0.30);
-    border: 1px solid rgba(247,243,235,0.6);
-    cursor: pointer;
-    transition: background 0.3s, transform 0.3s;
-    pointer-events: auto;
-  }
-  .cp-marker:hover, .cp-marker.active {
-    background: #B22222;
-    transform: translate(-50%, -50%) scale(1.4);
-  }
-  .cp-label {
-    position: absolute; left: calc(100% + 14px); top: 50%;
-    transform: translateY(-50%);
-    font-family: "Georgia", serif; font-size: 10px;
-    letter-spacing: 0.28em; text-transform: uppercase;
-    color: rgba(26,20,16,0.55); white-space: nowrap;
-    transition: color 0.3s, opacity 0.3s;
-  }
-  .cp-marker.active .cp-label { color: #1a1410; font-weight: 600; }
-  #mute-btn {
-    position: fixed; bottom: 28px; right: 28px;
-    z-index: 20; cursor: pointer;
-    background: rgba(247,243,235,0.7);
-    border: 1px solid rgba(26,20,16,0.15); border-radius: 50%;
-    padding: 0;
-    width: 36px; height: 36px;
-    display: flex; align-items: center; justify-content: center;
-    opacity: 0.55; transition: opacity 0.3s, background 0.3s;
-  }
-  #mute-btn:hover { opacity: 1; background: rgba(247,243,235,0.95); }
-  #mute-btn svg { width: 16px; height: 16px; fill: rgba(26,20,16,0.9); }
-
-  /* Tweaks panel */
-  #tweaks-panel {
-    position: fixed; top: 24px; right: 24px; z-index: 100;
-    width: 280px;
-    background: rgba(247,243,235,0.96);
-    border: 1px solid rgba(26,20,16,0.18);
-    box-shadow: 0 12px 32px -10px rgba(26,20,16,0.35);
-    padding: 14px 16px 16px;
-    font-family: "Georgia", serif;
-    color: #1a1410;
-    display: none;
-    max-height: 80vh; overflow-y: auto;
-    pointer-events: auto;
-  }
-  #tweaks-panel.open { display: block; }
-  #tweaks-panel h3 {
-    font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
-    margin: 0 0 12px; font-weight: normal;
-    display: flex; justify-content: space-between; align-items: center;
-  }
-  #tweaks-panel h3 button {
-    background: none; border: none; font: inherit; color: inherit;
-    cursor: pointer; opacity: 0.5; font-size: 16px; line-height: 1;
-  }
-  #tweaks-panel h3 button:hover { opacity: 1; }
-  #tweaks-panel .tw-group {
-    border-top: 1px solid rgba(26,20,16,0.12);
-    padding: 10px 0 4px;
-  }
-  #tweaks-panel .tw-group h4 {
-    font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase;
-    margin: 0 0 8px; font-weight: 600; color: #B22222;
-  }
-  #tweaks-panel .tw-row {
-    display: grid; grid-template-columns: 14px 1fr 36px;
-    gap: 8px; align-items: center;
-    font-size: 11px; margin-bottom: 6px;
-  }
-  #tweaks-panel .tw-row label { opacity: 0.65; }
-  #tweaks-panel .tw-row input[type="range"] {
-    width: 100%; accent-color: #B22222;
-  }
-  #tweaks-panel .tw-row .tw-val {
-    font-family: ui-monospace, monospace; font-size: 10px;
-    text-align: right; opacity: 0.75;
-  }
-
-</style>
+<title>Eva Li</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div id="scroll-space"></div>
 
+<!-- Checkpoint title — top right, changes per section -->
+<div id="checkpoint-title">About</div>
+
+<!-- Side cards: each .cp-item is a small clickable name card -->
+
 <div class="cp-text" id="cp1">
-  <h2>Hi! I'm Evangeline Li</h2>
-  <p>I'm a student studying Information Systems and Computer Science at Carnegie Mellon University. I love to build things, make art, and play soccer.</p>
+  <h2>Evangeline Li</h2>
+  <p class="cp-subtitle">CMU · Information Systems &amp; Computer Science · </p>
+  <p>Builder, artist, and soccer player. I make things that are both functional and beautiful. Got something in mind? Let's build it.</p>
+  <div class="cp-divider"></div>
+  <p>Currently interning at CTAT, TAing 15-122, and researching privacy systems at CMU SCS.</p>
   <p class="cp-links">
-    <a href="/cdn-cgi/l/email-protection#94f8fdf1e2f5edfdf2f5fad4f3f9f5fdf8baf7fbf9">Email</a>
+    <a href="/cdn-cgi/l/email-protection#94f8fdf1e2f5edfdf2f5fad4f3f9f5fdf8baf7fbf9">lievayifan@gmail.com</a>
     <span class="cp-sep">·</span>
     <a href="https://github.com/EvuhLi" target="_blank" rel="noopener">GitHub</a>
     <span class="cp-sep">·</span>
@@ -300,13 +28,13 @@
   </p>
 </div>
 
+<div class="cp-text" id="cp-art">
+</div>
+
 <div class="cp-text" id="cp2">
-  <h2>Experience</h2>
   <div class="cp-item">
-    <div class="cp-row" data-toggle>
-      <div class="cp-role">Software Engineering Intern · CTAT</div>
-      <div class="cp-place">Jan 2026 – Present · Vue, TypeScript, JavaScript, HTML, CSS · Git, Figma</div>
-    </div>
+    <div class="cp-role">Software Engineering Intern · CTAT</div>
+    <div class="cp-place">Jan 2026 – Present · Vue, TypeScript, JavaScript, HTML, CSS · Git, Figma</div>
     <div class="cp-detail">
       <ul>
         <li>Designed and shipped 20+ features end-to-end for CTAT, a web-based intelligent tutoring system used in university research environments.</li>
@@ -316,10 +44,8 @@
     </div>
   </div>
   <div class="cp-item">
-    <div class="cp-row" data-toggle>
-      <div class="cp-role">15-122 Teaching Assistant · CMU SCS</div>
-      <div class="cp-place">August 2026 – Present · Data Structures & Algorithms, C/C0</div>
-    </div>
+    <div class="cp-role">15-122 Teaching Assistant · CMU SCS</div>
+    <div class="cp-place">August 2026 – Present · Data Structures &amp; Algorithms, C/C0</div>
     <div class="cp-detail">
       <ul>
         <li>TA for 400+ students in data structures, algorithms, and correctness/safety proofs using C and C0.</li>
@@ -328,25 +54,20 @@
     </div>
   </div>
   <div class="cp-item">
-    <div class="cp-row" data-toggle>
-      <div class="cp-role">Undergraduate Researcher · CMU SCS</div>
-      <div class="cp-place">May 2026 – Present · Privacy Systems</div>
-    </div>
+    <div class="cp-role">Undergraduate Researcher · CMU SCS</div>
+    <div class="cp-place">May 2026 – Present · Privacy Systems</div>
     <div class="cp-detail">
       <ul>
-        <li>Researching under Professor Hana Habib, mapping the relationship between privacy-preserving infrastructure and common software design patterns to create a resource for privacy practitioners</li>
+        <li>Researching under Professor Hana Habib, mapping the relationship between privacy-preserving infrastructure and common software design patterns to create a resource for privacy practitioners.</li>
       </ul>
     </div>
   </div>
 </div>
 
 <div class="cp-text" id="cp2b">
-  <h2>Experience</h2>
   <div class="cp-item">
-    <div class="cp-row" data-toggle>
-      <div class="cp-role">Resident Assistant · CMU Housing</div>
-      <div class="cp-place">June 2026 – August 2026</div>
-    </div>
+    <div class="cp-role">Resident Assistant · CMU Housing</div>
+    <div class="cp-place">June 2026 – August 2026</div>
     <div class="cp-detail">
       <ul>
         <li>Collaborate with a 16-person RA staff to mediate resident conflicts and mental-health crises affecting 700+ students.</li>
@@ -355,10 +76,8 @@
     </div>
   </div>
   <div class="cp-item">
-    <div class="cp-row" data-toggle>
-      <div class="cp-role">Lead Sensei · Code Ninjas</div>
-      <div class="cp-place">May 2024 – Aug 2025 · JavaScript, HTML, CSS · Git/GitHub</div>
-    </div>
+    <div class="cp-role">Lead Sensei · Code Ninjas</div>
+    <div class="cp-place">May 2024 – Aug 2025 · JavaScript, HTML, CSS · Git/GitHub</div>
     <div class="cp-detail">
       <ul>
         <li>Led week-long intensive coding bootcamps for 40+ students ages 5–17, taking them from zero to a deployed personal web project.</li>
@@ -370,12 +89,9 @@
 </div>
 
 <div class="cp-text" id="cp3">
-  <h2>Projects</h2>
   <div class="cp-item">
-    <div class="cp-row" data-toggle>
-      <div class="cp-role">Loom · Hacking4Humanity Top Finisher</div>
-      <div class="cp-place">React/Vite · Node.js/Express · MongoDB · Python · March 2026</div>
-    </div>
+    <div class="cp-role">Loom · Hacking4Humanity Top Finisher</div>
+    <div class="cp-place">React/Vite · Node.js/Express · MongoDB · Python · March 2026</div>
     <div class="cp-detail">
       <ul>
         <li>Built a production-ready full-stack social platform that prevents AI web-scraping of art — React/Vite, Node/Express REST API, MongoDB schemas for users, posts, and communities.</li>
@@ -386,10 +102,8 @@
     </div>
   </div>
   <div class="cp-item">
-    <div class="cp-row" data-toggle>
-      <div class="cp-role">Minecraft Live</div>
-      <div class="cp-place">Python · MediaPipe · WebSockets · Neural Inference · Feb 2026</div>
-    </div>
+    <div class="cp-role">Minecraft Live</div>
+    <div class="cp-place">Python · MediaPipe · WebSockets · Neural Inference · Feb 2026</div>
     <div class="cp-detail">
       <ul>
         <li>Real-time full-body motion control for Minecraft — Python + MediaPipe translating pose and head orientation into low-latency keyboard/mouse input via neural-network inference.</li>
@@ -402,12 +116,9 @@
 </div>
 
 <div class="cp-text" id="cp3b">
-  <h2>Projects</h2>
   <div class="cp-item">
-    <div class="cp-row" data-toggle>
-      <div class="cp-role">Sparrow</div>
-      <div class="cp-place">MongoDB · React · HTML/CSS · Adobe Illustrator · Aug 2024</div>
-    </div>
+    <div class="cp-role">Sparrow</div>
+    <div class="cp-place">MongoDB · React · HTML/CSS · Adobe Illustrator · Aug 2024</div>
     <div class="cp-detail">
       <ul>
         <li>Full-stack educational app teaching children Java through visual block coding and interactive lessons.</li>
@@ -418,10 +129,8 @@
     </div>
   </div>
   <div class="cp-item">
-    <div class="cp-row" data-toggle>
-      <div class="cp-role">Personal Website</div>
-      <div class="cp-place">HTML · CSS · JavaScript · Three.js · May 2026</div>
-    </div>
+    <div class="cp-role">Personal Website</div>
+    <div class="cp-place">HTML · CSS · JavaScript · Three.js · May 2026</div>
     <div class="cp-detail">
       <ul>
         <li>Designed and built this scroll-driven, ink-painting portfolio from scratch — a Three.js mountain scene with hand-rolled GLSL shaders for the sumi-e wash and ridge contours.</li>
@@ -432,712 +141,65 @@
 </div>
 
 <div class="cp-text" id="cp4">
-  <h2>Education</h2>
-  <p>Carnegie Mellon University · Aug 2025 – Dec 2028</p>
-  <p>B.S. Computer Science &amp; Information Systems · GPA 3.89 · Dean's List</p>
-  <p><span class="cp-tag">Relevant Courses:</span> Data Structures · Discrete Math · Linear Algebra · Software Design · Database Management</p>
-  <p><span class="cp-tag">Honors:</span> AWS Cloud Practitioner · Hacking4Humanity Winner · National Merit Finalist</p>
+  <h2>Carnegie Mellon University</h2>
+  <p class="cp-subtitle">Pittsburgh, PA · Aug 2025 – Dec 2028</p>
+  <p>B.S. Information Systems &amp; Computer Science · GPA 3.89 · Dean's List</p>
+  <div class="cp-divider"></div>
+  <p><span class="cp-tag">Courses</span> Data Structures · Discrete Math · Linear Algebra · Software Design · Databases</p>
+  <p><span class="cp-tag">Honors</span> AWS Cloud Practitioner · Hacking4Humanity Winner · National Merit Finalist</p>
 </div>
 
+<!-- Modal -->
+<div id="modal-overlay">
+  <div id="modal-card">
+    <button id="modal-close">×</button>
+    <div id="modal-inner"></div>
+  </div>
+</div>
+
+<!-- Progress bar -->
 <div id="progress-bar">
   <div id="progress-fill"></div>
-  <div class="cp-marker active" data-target="0.00" style="bottom:0%"><span class="cp-label">About</span></div>
-  <div class="cp-marker" data-target="0.35" style="bottom:33%"><span class="cp-label">Experience</span></div>
-  <div class="cp-marker" data-target="0.65" style="bottom:66%"><span class="cp-label">Projects</span></div>
-  <div class="cp-marker" data-target="1" style="bottom:100%"><span class="cp-label">Education</span></div>
+  <div class="cp-marker active" data-target="0.00" style="left:0%"><span class="cp-label">About</span></div>
+  <div class="cp-marker" data-target="0.22" style="left:25%"><span class="cp-label">Art</span></div>
+  <div class="cp-marker" data-target="0.44" style="left:50%"><span class="cp-label">Projects</span></div>
+  <div class="cp-marker" data-target="0.66" style="left:75%"><span class="cp-label">Experience</span></div>
+  <div class="cp-marker" data-target="1" style="left:100%"><span class="cp-label">Connect</span></div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>
-const ANCHOR_DEFAULTS = /*EDITMODE-BEGIN*/{
-  "cp1": {
-    "x": 7.5,
-    "y": 4.5,
-    "z": 2.5
-  },
-  "cp2": {
-    "x": -6.5,
-    "y": 10,
-    "z": 9
-  },
-  "cp3": {
-    "x": -12,
-    "y": 16,
-    "z": -5
-  },
-  "cp4": {
-    "x": 6,
-    "y": 20.5,
-    "z": -4.5
-  },
-  "cp2b": {
-    "x": 9,
-    "y": 10,
-    "z": -7
-  },
-  "cp3b": {
-    "x": 11,
-    "y": 16,
-    "z": 5
-  }
-}/*EDITMODE-END*/;
-</script>
-<script>
-history.scrollRestoration = 'manual';
-window.scrollTo(100, 100);
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xf7f3eb);
-scene.fog = new THREE.FogExp2(0xf7f3eb, 0.04);
-
-const W = window.innerWidth, H = window.innerHeight;
-const camera = new THREE.PerspectiveCamera(42, W / H, 0.1, 2000); 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
-renderer.setSize(W, H);
-document.body.appendChild(renderer.domElement);
-
-const HM_FILE = "hm.png"; 
-
-// --- INK CURSOR ---
-function initInkCursor() {
-  document.documentElement.style.cursor = 'none';
-  document.body.style.cursor = 'none';
-  const c = document.createElement('canvas');
-  const ctx = c.getContext('2d');
-  c.style.position = 'fixed';
-  c.style.inset = '0';
-  c.style.zIndex = '9998';
-  c.style.pointerEvents = 'none';
-  document.body.appendChild(c);
-  let dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const resizeCursorCanvas = () => {
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
-    c.width = window.innerWidth * dpr;
-    c.height = window.innerHeight * dpr;
-    c.style.width = window.innerWidth + 'px';
-    c.style.height = window.innerHeight + 'px';
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  };
-  resizeCursorCanvas();
-  window.addEventListener('resize', resizeCursorCanvas);
-  const nodes = [];
-  let lastX = null, lastY = null, targetX = 0, targetY = 0, dropX = 0, dropY = 0, dropVisible = false;
-  const TTL = 320, MAX_R = 4, MAX_DOT_GAP = 8, N_BLOB = 10;
-  const addPoint = (x, y, t) => {
-    if (lastX !== null) {
-      const dx = x - lastX, dy = y - lastY, dist = Math.hypot(dx, dy);
-      if (dist > MAX_DOT_GAP) {
-        const steps = Math.ceil(dist / MAX_DOT_GAP);
-        for (let i = 1; i < steps; i++) {
-          const f = i / steps;
-          nodes.push({ x: lastX + dx * f, y: lastY + dy * f, born: t });
-        }
-      }
-    }
-    nodes.push({ x, y, born: t });
-    if (nodes.length > 400) nodes.splice(0, nodes.length - 400);
-    lastX = x; lastY = y;
-  };
-  window.addEventListener('pointermove', (e) => {
-    targetX = e.clientX; targetY = e.clientY;
-    if (!dropVisible) { dropX = targetX; dropY = targetY; dropVisible = true; }
-    addPoint(targetX, targetY, performance.now());
-  });
-  const draw = () => {
-    const now = performance.now(), t = now * 0.001;
-    ctx.clearRect(0, 0, c.width / dpr, c.height / dpr);
-    while (nodes.length && now - nodes[0].born > TTL) nodes.shift();
-    for (let i = 1; i < nodes.length; i++) {
-      const b = nodes[i], age = (now - b.born) / TTL, w = MAX_R * 2 * Math.pow(1 - age, 0.6);
-      if (w < 0.4) continue;
-      ctx.strokeStyle = `rgba(16,18,22,${(1 - age) * 0.9})`;
-      ctx.lineWidth = w;
-      ctx.beginPath();
-      ctx.moveTo(nodes[i - 1].x, nodes[i - 1].y);
-      ctx.lineTo(b.x, b.y);
-      ctx.stroke();
-    }
-    if (dropVisible) {
-      dropX = targetX; dropY = targetY;
-      ctx.beginPath();
-      for (let i = 0; i < N_BLOB; i++) {
-        const a = (i / N_BLOB) * Math.PI * 2;
-        const r = MAX_R * (1 + (Math.sin(a * 2 + t * 2.2) * 0.13));
-        ctx.lineTo(dropX + Math.cos(a) * r, dropY + Math.sin(a) * r);
-      }
-      ctx.closePath();
-      ctx.fillStyle = 'rgba(14,16,20,0.94)';
-      ctx.fill();
-    }
-    requestAnimationFrame(draw);
-  };
-  draw();
-}
-initInkCursor();
-
-// --- MOUNTAIN SHADERS ---
-const surfaceVert = `
-  uniform sampler2D heightMap;
-  uniform float displacementScale;
-  varying float vHeight;
-  varying float vBleed;
-  void main() {
-    vec2 sampleUv = uv;
-    float h = texture2D(heightMap, sampleUv).r;
-    vHeight = h;
-    float eps = 1.0/512.0;
-    float hL = texture2D(heightMap, sampleUv + vec2(-eps, 0.0)).r;
-    float hR = texture2D(heightMap, sampleUv + vec2( eps, 0.0)).r;
-    float hD = texture2D(heightMap, sampleUv + vec2(0.0, -eps)).r;
-    float hU = texture2D(heightMap, sampleUv + vec2(0.0,  eps)).r;
-    float ridge = clamp((hL + hR + hD + hU - 4.0 * h) * -50.0, 0.0, 1.0);
-    float slope = clamp(abs(hL - hR) + abs(hU - hD), 0.0, 1.0);
-    vBleed = ridge + (slope * 0.2);
-    vec3 displaced = position + normal * h * displacementScale;
-    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(displaced, 1.0);
-  }
-`;
-
-const surfaceFrag = `
-  varying float vHeight;
-  varying float vBleed;
-  uniform float mistLevel;
-  void main() {
-    vec3 paper = vec3(0.97, 0.95, 0.92); 
-    vec3 inkBlack = vec3(0.02, 0.02, 0.03); 
-    float sharpRidge = smoothstep(0.4, 0.8, vBleed);
-    float washIntensity = vBleed * 1.5;
-    float layeredWash = floor(washIntensity * 3.0) / 3.0; 
-    layeredWash = clamp(layeredWash, 0.0, 0.5);
-    float finalIntensity = max(sharpRidge, layeredWash);
-    finalIntensity *= smoothstep(0.05, 0.35, vHeight);
-    finalIntensity = mix(finalIntensity, 1.0, pow(vHeight, 4.0) * 0.6);
-    vec3 finalColor = mix(paper, inkBlack, clamp(finalIntensity, 0.0, 1.0));
-    float alpha = smoothstep(mistLevel, mistLevel + 0.2, vHeight);
-    alpha = mix(0.0, alpha, smoothstep(0.0, 0.15, vHeight));
-    gl_FragColor = vec4(finalColor, alpha);
-  }
-`;
-
-const bgMountainFrag = `
-  varying float vHeight;
-  varying float vBleed;
-  uniform float mistLevel;
-  uniform vec3 inkColor;
-  uniform vec3 contourColor;
-  void main() {
-    float alpha = smoothstep(mistLevel, mistLevel + 0.09, vHeight);
-    if (alpha <= 0.0) discard;
-    float contour = smoothstep(0.16, 0.7, vBleed);
-    float highInk = smoothstep(0.45, 0.95, vHeight) * 0.18;
-    vec3 color = mix(inkColor, contourColor, contour);
-    color = mix(color, contourColor, highInk);
-    gl_FragColor = vec4(color, alpha);
-  }
-`;
-
-const bgOutlineVert = `
-  uniform sampler2D heightMap;
-  uniform float displacementScale;
-  varying float vHeight;
-  void main() {
-    float h = texture2D(heightMap, uv).r;
-    vHeight = h;
-    vec3 displaced = position + normal * h * displacementScale + normal * 0.22;
-    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(displaced, 1.0);
-  }
-`;
-
-const bgOutlineFrag = `
-  varying float vHeight;
-  uniform float mistLevel;
-  uniform vec3 contourColor;
-  void main() {
-    float alpha = smoothstep(mistLevel, mistLevel + 0.09, vHeight);
-    if (alpha <= 0.0) discard;
-    gl_FragColor = vec4(contourColor, alpha);
-  }
-`;
-
-// --- BIRDS ---
-const birdClusters = [];
-const sphereMat = new THREE.MeshBasicMaterial({ color: 0x010102, transparent: true, opacity: 0.95, side: THREE.DoubleSide });
-const makeHalfOvalGeo = (side) => {
-  const shape = new THREE.Shape();
-  shape.moveTo(0, -1); shape.quadraticCurveTo(side, -1, side, 0); shape.quadraticCurveTo(side, 1, 0, 1); shape.lineTo(0, -1);
-  return new THREE.ShapeGeometry(shape, 8);
-};
-const leftWingGeo = makeHalfOvalGeo(-1), rightWingGeo = makeHalfOvalGeo(1);
-
-const createBirdCluster = (centerX, centerY, centerZ) => {
-  const cluster = new THREE.Group(); cluster.position.set(centerX, 0, centerZ);
-  cluster.userData.heightOffset = centerY;
-  for (let i = 0; i < 8; i++) {
-    const s = new THREE.Group();
-    const lP = new THREE.Group(), rP = new THREE.Group();
-    lP.add(new THREE.Mesh(leftWingGeo, sphereMat)); rP.add(new THREE.Mesh(rightWingGeo, sphereMat));
-    s.add(lP, rP);
-    s.position.set((Math.random() - 0.5) * 3, 0, (Math.random() - 0.5) * 3);
-    s.scale.set(0.08, 0.02, 0.02);
-    s.userData = { phase: Math.random() * 6.2, speed: 1.0 + Math.random(), lW: lP, rW: rP };
-    cluster.add(s);
-  }
-  cluster.renderOrder = 999; scene.add(cluster); birdClusters.push(cluster);
-};
-createBirdCluster(4, 0, 2); createBirdCluster(-5, -1, 4);
-// far-ring clusters — positions scaled from far bgPlacements × 0.62, heightOffset=10 to float near bg peaks
-
-// --- ASSET LOADER ---
-let trail = null;
-const TRAIL_N = 120;
-const loader = new THREE.TextureLoader();
-loader.load(HM_FILE, (heightTex) => {
-  const DISP = 20.0;
-  const SEGS = 512;
-  
-  // 1. MAIN MOUNTAIN (UNTOUCHED LOGIC)
-  const geo = new THREE.PlaneGeometry(24, 24, SEGS, SEGS);
-  geo.rotateX(-Math.PI / 2);
-
-  const surfaceMat = new THREE.ShaderMaterial({
-    uniforms: { heightMap: {value: heightTex}, displacementScale: {value: DISP}, mistLevel: {value: 0.01} },
-    vertexShader: surfaceVert, fragmentShader: surfaceFrag,
-    transparent: true, side: THREE.FrontSide
-  });
-
-  const contourMat = new THREE.ShaderMaterial({
-    uniforms: { heightMap: {value: heightTex}, displacementScale: {value: DISP}, mistLevel: {value: 0.01} },
-    vertexShader: `
-      uniform sampler2D heightMap;
-      uniform float displacementScale;
-      void main() {
-        float h = texture2D(heightMap, uv).r;
-        vec3 displaced = position + normal * h * displacementScale + normal * 0.2; 
-        gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(displaced, 1.0);
-      }
-    `,
-    fragmentShader: `void main() { gl_FragColor = vec4(0.0, 0.0, 0.0, 0.9); }`,
-    side: THREE.BackSide, transparent: true
-  });
-
-  const mountain = new THREE.Mesh(geo, surfaceMat);
-  const outline = new THREE.Mesh(geo, contourMat);
-  mountain.position.y = -4; outline.position.y = -4;
-  scene.add(mountain, outline);
-
-  // 2. BACKGROUND RANGE (SHORTER, SPANNING)
-  const bgGeo = new THREE.PlaneGeometry(70, 35, 64, 64);
-  bgGeo.rotateX(-Math.PI / 2);
-  const createBgMaterial = (inkColor, contourColor) => new THREE.ShaderMaterial({
-    uniforms: {
-      heightMap: {value: heightTex},
-      displacementScale: {value: DISP * 1},
-      mistLevel: {value: 0.16},
-      inkColor: {value: inkColor},
-      contourColor: {value: contourColor}
-    },
-    vertexShader: surfaceVert, fragmentShader: bgMountainFrag,
-    transparent: true, depthWrite: true, side: THREE.FrontSide
-  });
-  const createBgOutlineMaterial = (contourColor) => new THREE.ShaderMaterial({
-    uniforms: {
-      heightMap: {value: heightTex},
-      displacementScale: {value: DISP * 1},
-      mistLevel: {value: 0.16},
-      contourColor: {value: contourColor}
-    },
-    vertexShader: bgOutlineVert, fragmentShader: bgOutlineFrag,
-    transparent: true, depthWrite: true, side: THREE.BackSide
-  });
-  const bgPlacements = [
-    // near ring
-    [0, -15, -58, 0],
-    [34, -15.2, -48, 0.45],
-    [58, -15.4, -24, 0.9],
-    [64, -15.2, 12, 1.35],
-    [46, -15.6, 42, 1.85],
-    [12, -15.1, 62, 2.45],
-    [-28, -15.5, 56, 3.05],
-    [-56, -15.2, 28, 3.65],
-    [-62, -15.7, -12, 4.15],
-    [-38, -15.3, -48, 5.45],
-
-    // middle ring
-    [0, -17, -104, 0.15],
-    [58, -17.2, -86, 0.6],
-    [98, -17.6, -42, 1.05],
-    [108, -17.1, 18, 1.55],
-    [78, -17.8, 72, 2.05],
-    [22, -17.3, 106, 2.65],
-    [-46, -17.7, 96, 3.2],
-    [-94, -17.2, 48, 3.75],
-    [-104, -17.8, -24, 4.35],
-    [-62, -17.4, -86, 5.55],
-
-    // far wash
-    [0, -19.2, -162, 0.35],
-    [88, -19.6, -132, 0.8],
-    [148, -20, -64, 1.2],
-    [154, -19.4, 42, 1.75],
-    [108, -20.1, 124, 2.25],
-    [28, -19.7, 158, 2.8],
-    [-72, -20.2, 142, 3.35],
-    [-138, -19.6, 72, 3.9],
-    [-148, -20.3, -44, 4.55],
-    [-88, -19.8, -132, 5.75]
-  ];
-
-  // Offset each ring by 1/3 of the per-mountain angular step (36°) so rings interleave
-  const ringOffsets = [0, Math.PI / 15, 2 * Math.PI / 15];
-  bgPlacements.forEach(([x, y, z, rotY], i) => {
-    const θ = ringOffsets[Math.floor(i / 10)];
-    const cosT = Math.cos(θ), sinT = Math.sin(θ);
-    const rx = x * cosT - z * sinT;
-    const rz = x * sinT + z * cosT;
-    const BG_DISTANCE_SCALE = 0.62;
-    const scaledX = rx * BG_DISTANCE_SCALE;
-    const scaledZ = rz * BG_DISTANCE_SCALE;
-    const dist = Math.hypot(scaledX, scaledZ);
-    const MIST_START = 30;   // dist where mist begins fading in
-    const MIST_END   = 110;  // dist where mist is fully applied
-    const TONE_NEAR  = 0.80; // ink darkness of closest bg mountains
-    const TONE_FAR   = 0.95; // washes toward paper white for far mountains
-    const mist = THREE.MathUtils.clamp((dist - MIST_START) / (MIST_END - MIST_START), 0, 1);
-    const tone = THREE.MathUtils.lerp(TONE_NEAR, TONE_FAR, mist);
-    const inkColor = new THREE.Color(tone, tone * 0.96, tone * 0.9);
-    const contourTone = Math.max(tone - 0.08, 0.28);
-    const contourColor = new THREE.Color(contourTone, contourTone * 0.95, contourTone * 0.9);
-    const bgM = new THREE.Mesh(bgGeo, createBgMaterial(inkColor, contourColor));
-    const bgOutline = new THREE.Mesh(bgGeo, createBgOutlineMaterial(contourColor));
-    bgM.position.set(scaledX, y, scaledZ);
-    bgOutline.position.copy(bgM.position);
-    bgM.rotation.y = rotY + θ;
-    bgOutline.rotation.y = rotY + θ;
-    scene.add(bgOutline, bgM);
-  });
-
-  birdClusters.forEach(c => c.position.y = DISP - 12.2 + c.userData.heightOffset);
-
-  // Tree Groves
-  const treeMat = new THREE.MeshBasicMaterial({ color: 0x0a0a0c, transparent: true, opacity: 0.8 });
-  const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
-  canvas.width = canvas.height = 128; ctx.drawImage(heightTex.image, 0, 0, 128, 128);
-  const data = ctx.getImageData(0,0,128,128).data;
-  for(let g = 0; g < 10; g++) {
-    let gx = 0.15 + Math.random() * 0.7, gy = 0.15 + Math.random() * 0.7;
-    for(let t = 0; t < 20; t++) {
-      let tx = gx + (Math.random() - 0.5) * 0.12, ty = gy + (Math.random() - 0.5) * 0.12;
-      let val = data[(Math.floor(ty*127)*128 + Math.floor(tx*127)) * 4] / 255;
-      if(val > 0.04 && val < 0.8) {
-        const tree = new THREE.Group();
-        for(let j=0; j<3; j++) {
-            const size = 0.08 - (j * 0.02);
-            const tMesh = new THREE.Mesh(new THREE.CylinderGeometry(0, size, 0.2, 3), treeMat);
-            tMesh.position.y = j * 0.12; tree.add(tMesh);
-        }
-        tree.position.set((tx-0.5)*24, val*DISP - 4.15, (ty-0.5)*24);
-        tree.rotation.y = Math.random() * Math.PI;
-        scene.add(tree);
-      }
-    }
-  }
-
-  // --- TUBE TRAIL ---
-  // Sample camPath XZ, project onto mountain surface with bilinear height interpolation
-  // --- CORRECTED TUBE TRAIL (PINNED TO SURFACE) ---
-  // Sample camPath XZ, project onto mountain surface with bilinear height interpolation
- // --- CORRECTED TUBE TRAIL (PINNED TO SURFACE) ---
-// --- MOUNTAIN-LOCKED TRAIL ---
-  // --- SPIRAL MOUNTAIN TRAIL ---
-  const surfacePoints = [];
-  const GEOM_SIZE = 24.0; 
-  const SPIRAL_TURNS = .9; // How many times it wraps (adjust for more/less twist)
-  const START_RADIUS = 6.0; // Starting distance from center at the base
-  const END_RADIUS = 0.;   // Ending distance from center at the peak
-
-  for (let i = 0; i < TRAIL_N; i++) {
-    const f = i / (TRAIL_N - 1);
-    
-    // 1. Calculate the Spiral X and Z
-    const angle = f * Math.PI * 2 * SPIRAL_TURNS;
-    const radius = THREE.MathUtils.lerp(START_RADIUS, END_RADIUS, f);
-    
-    const sx = Math.cos(angle) * radius;
-    const sz = Math.sin(angle) * radius;
-
-    // 2. Map Spiral XZ to Texture UV (0 to 1)
-    const tu = THREE.MathUtils.clamp((sx / GEOM_SIZE) + 0.5, 0, 1);
-    const tv = THREE.MathUtils.clamp((sz / GEOM_SIZE) + 0.5, 0, 1);
-
-    // 3. Height Lookup
-    const fx = tu * 127, fz = tv * 127;
-    const x0 = Math.floor(fx), z0 = Math.floor(fz);
-    const h = data[(z0 * 128 + x0) * 4] / 255;
-
-    // 4. Construct Point (pinned to mountain height)
-    // Using h * DISP - 4 to match your mountain's exact Y position
-    surfacePoints.push(new THREE.Vector3(sx, (h * DISP) - 4 + 0.16, sz));
-  }
-
-  const surfaceCurve = new THREE.CatmullRomCurve3(surfacePoints);
-  const trailGeo = new THREE.TubeGeometry(surfaceCurve, 200, 0.05, 8, false);
-
-  const trailMat = new THREE.MeshBasicMaterial({
-    color: 0xB22222,
-    transparent: true,
-    opacity: 0.9,
-    depthTest: true,
-    depthWrite: true,
-  });
-
-  trail = new THREE.Mesh(trailGeo, trailMat);
-  trail.renderOrder = 0;
-  scene.add(trail);
-});
-
-const camPath = new THREE.CatmullRomCurve3([
-  new THREE.Vector3(15, 3, 15), new THREE.Vector3(-12, 12, 12), new THREE.Vector3(-15, 18, -8), new THREE.Vector3(8, 22, -5)
-]);
-
-// Each checkpoint: [rawStart, rawEnd, elementId]
-// The dwell zones consume scroll without moving the camera much.
-// Each dwell zone is 0.10 wide, gaps are 0.20 wide — perfectly even spacing
-const CHECKPOINTS = [
-  [-0.2, 0.22, 'cp1'],
-  [0.22, 0.48, 'cp2'],
-  [0.52, 0.78, 'cp3'],
-  [0.82, 1.2, 'cp4'],
-];
-
-// Piecewise linear: raw scroll → camera progress (flat segments = slow zones)
-function remapScroll(raw) {
-  const segs = [
-    [0.00, 0.10,  0.00, 0.02],  // cp1 dwell
-    [0.10, 0.30,  0.02, 0.32],  // travel to cp2  (0.30 camera)
-    [0.30, 0.40,  0.32, 0.34],  // cp2 dwell
-    [0.40, 0.60,  0.34, 0.64],  // travel to cp3  (0.30 camera)
-    [0.60, 0.70,  0.64, 0.66],  // cp3 dwell
-    [0.70, 0.90,  0.66, 0.96],  // travel to cp4  (0.30 camera)
-    [0.90, 1.00,  0.96, 0.99],  // cp4 dwell
-  ];
-  for (const [r0, r1, c0, c1] of segs) {
-    if (raw <= r1) return c0 + ((raw - r0) / (r1 - r0)) * (c1 - c0);
-  }
-  return 0.99;
-}
-
-// World-space anchors — each card is pinned to a point on/around the mountain
-// instead of a fixed screen position. The card is visible only when the camera
-// is roughly facing that side of the mountain.
-const ANCHORS = [
-  { id: 'cp1', pos: new THREE.Vector3(ANCHOR_DEFAULTS.cp1.x, ANCHOR_DEFAULTS.cp1.y, ANCHOR_DEFAULTS.cp1.z) },
-  { id: 'cp2', pos: new THREE.Vector3(ANCHOR_DEFAULTS.cp2.x, ANCHOR_DEFAULTS.cp2.y, ANCHOR_DEFAULTS.cp2.z) },
-  { id: 'cp3', pos: new THREE.Vector3(ANCHOR_DEFAULTS.cp3.x, ANCHOR_DEFAULTS.cp3.y, ANCHOR_DEFAULTS.cp3.z) },
-  { id: 'cp4', pos: new THREE.Vector3(ANCHOR_DEFAULTS.cp4.x, ANCHOR_DEFAULTS.cp4.y, ANCHOR_DEFAULTS.cp4.z) },
-  { id: 'cp2b', pos: new THREE.Vector3(ANCHOR_DEFAULTS.cp2b.x, ANCHOR_DEFAULTS.cp2b.y, ANCHOR_DEFAULTS.cp2b.z) },
-  { id: 'cp3b', pos: new THREE.Vector3(ANCHOR_DEFAULTS.cp3b.x, ANCHOR_DEFAULTS.cp3b.y, ANCHOR_DEFAULTS.cp3b.z) },
-];
-const _v = new THREE.Vector3();
-const _camDir = new THREE.Vector3();
-const _outward = new THREE.Vector3();
-function updateAnchors() {
-  ANCHORS.forEach(a => {
-    const el = document.getElementById(a.id);
-    if (!el) return;
-    _v.copy(a.pos).project(camera);
-    const onScreen = _v.z < 1;
-    const x = (_v.x * 0.5 + 0.5) * window.innerWidth;
-    const y = (-_v.y * 0.5 + 0.5) * window.innerHeight;
-
-    // outward from mountain's vertical axis at the anchor's height
-    _outward.set(a.pos.x, 0, a.pos.z).normalize();
-    _camDir.subVectors(camera.position, a.pos).normalize();
-    const facing = _camDir.dot(_outward); // 1 = facing camera, -1 = back of mountain
-
-    let opacity = 0;
-    if (onScreen && facing > 0) {
-      opacity = THREE.MathUtils.smoothstep(facing, 0.05, 0.55);
-    }
-
-    // offset so text sits to the right of the anchor instead of on top of it
-    el.style.transform = `translate(20px, -24px)`;
-    el.style.left = x + 'px';
-    el.style.top = y + 'px';
-    el.style.opacity = opacity.toFixed(3);
-  });
-}
-
-function updateProgressBar(raw) {
-  document.getElementById('progress-fill').style.height = (raw * 100) + '%';
-  document.querySelectorAll('.cp-marker').forEach(m => {
-    const t = parseFloat(m.dataset.target);
-    m.classList.toggle('active', raw >= t && raw < t + 0.10);
-  });
-}
-// Expand/collapse detail rows — only one open at a time per card
-document.querySelectorAll('.cp-row[data-toggle]').forEach(row => {
-  row.addEventListener('click', () => {
-    const item = row.closest('.cp-item');
-    const card = row.closest('.cp-text');
-    if (!item || !card) return;
-    const wasOpen = item.classList.contains('open');
-    card.querySelectorAll('.cp-item.open').forEach(o => o.classList.remove('open'));
-    if (!wasOpen) item.classList.add('open');
-  });
-});
-
-document.querySelectorAll('.cp-marker').forEach(m => {
-  m.addEventListener('click', () => {
-    const t = parseFloat(m.dataset.target);
-    window.scrollTo({ top: t * (document.body.scrollHeight - window.innerHeight), behavior: 'smooth' });
-  });
-});
-updateProgressBar(0);
-
-let scrollProgress = 0;
-window.addEventListener('scroll', () => {
-  scrollProgress = window.scrollY / (document.body.scrollHeight - window.innerHeight);
-  updateProgressBar(scrollProgress);
-});
-
-function animate() {
-  requestAnimationFrame(animate);
-  const clock = performance.now() * 0.001;
-  const p = Math.min(Math.max(remapScroll(scrollProgress), 0), 0.99);
-  camera.position.lerp(camPath.getPoint(p), 0.06);
-  camera.lookAt(0, p * 10, 0);
-
-  if (trail) trail.geometry.setDrawRange(0, Math.floor(scrollProgress * trail.geometry.index.count));
-
-  updateAnchors();
-
-  birdClusters.forEach(cluster => {
-    cluster.children.forEach(s => {
-      const flap = Math.sin(clock * s.userData.speed * 8.0 + s.userData.phase);
-      s.position.y = Math.sin(clock * s.userData.speed + s.userData.phase) * 0.2;
-      s.userData.lW.rotation.y = flap * 0.7; s.userData.rW.rotation.y = -flap * 0.7;
-    });
-  });
-  renderer.render(scene, camera);
-}
-animate();
-
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-</script>
-
+<!-- Tweaks panel -->
 <div id="tweaks-panel">
   <h3>Tweaks · Anchor Positions <button id="tw-close" title="Close">×</button></h3>
   <div id="tw-body"></div>
 </div>
 
-<script>
-(function(){
-  const panel = document.getElementById('tweaks-panel');
-  const body = document.getElementById('tw-body');
-  const closeBtn = document.getElementById('tw-close');
-  const labels = { cp1: 'About', cp2: 'Experience A', cp2b: 'Experience B', cp3: 'Projects A', cp3b: 'Projects B', cp4: 'Education' };
-  const axes = [
-    { k: 'x', min: -25, max: 25 },
-    { k: 'y', min: -5,  max: 28 },
-    { k: 'z', min: -25, max: 25 },
-  ];
-
-  // Build UI
-  Object.keys(labels).forEach((id, idx) => {
-    const group = document.createElement('div');
-    group.className = 'tw-group';
-    group.innerHTML = `<h4>${idx+1}. ${labels[id]}</h4>`;
-    axes.forEach(({k, min, max}) => {
-      const row = document.createElement('div');
-      row.className = 'tw-row';
-      const v = ANCHOR_DEFAULTS[id][k];
-      row.innerHTML = `
-        <label>${k}</label>
-        <input type="range" min="${min}" max="${max}" step="0.5"
-               value="${v}" data-id="${id}" data-axis="${k}">
-        <span class="tw-val" data-val="${id}-${k}">${v.toFixed(1)}</span>`;
-      group.appendChild(row);
-    });
-    body.appendChild(group);
-  });
-
-  function applyEdit(id, axis, val) {
-    const anchor = ANCHORS.find(a => a.id === id);
-    if (anchor) anchor.pos[axis] = val;
-    ANCHOR_DEFAULTS[id][axis] = val;
-    const valEl = body.querySelector(`[data-val="${id}-${axis}"]`);
-    if (valEl) valEl.textContent = Number(val).toFixed(1);
-  }
-
-  body.addEventListener('input', (e) => {
-    const t = e.target;
-    if (t.tagName !== 'INPUT') return;
-    const id = t.dataset.id, axis = t.dataset.axis, val = parseFloat(t.value);
-    applyEdit(id, axis, val);
-    // persist
-    const next = JSON.parse(JSON.stringify(ANCHOR_DEFAULTS));
-    window.parent.postMessage({type: '__edit_mode_set_keys', edits: next}, '*');
-  });
-
-  // Edit-mode protocol
-  window.addEventListener('message', (e) => {
-    if (!e.data || typeof e.data !== 'object') return;
-    if (e.data.type === '__activate_edit_mode') panel.classList.add('open');
-    if (e.data.type === '__deactivate_edit_mode') panel.classList.remove('open');
-  });
-  closeBtn.addEventListener('click', () => {
-    panel.classList.remove('open');
-    window.parent.postMessage({type: '__edit_mode_dismissed'}, '*');
-  });
-  window.parent.postMessage({type: '__edit_mode_available'}, '*');
-})();
-</script>
-
-<audio id="bg-music" src="nastelbom-asian-asian-china-chinese-music-501705.mp3" loop preload="auto"></audio>
-
+<!-- Audio -->
+<!-- <audio id="bg-music" src="nastelbom-asian-asian-china-chinese-music-501705.mp3" loop preload="auto"></audio> -->
 <button id="mute-btn" title="Toggle music">
-  <!-- speaker icon (unmuted) -->
   <svg id="icon-sound" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
   </svg>
-  <!-- muted icon -->
   <svg id="icon-mute" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:none">
     <path d="M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06A8.99 8.99 0 0 0 17.73 19l2 2L21 19.73l-18-18zM12 4L9.91 6.09 12 8.18V4z"/>
   </svg>
 </button>
 
+<!-- Scripts: ANCHOR_DEFAULTS must be inline so both scene.js and ui.js can read it -->
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
 <script>
-const audio = document.getElementById('bg-music');
-const btn = document.getElementById('mute-btn');
-const iconSound = document.getElementById('icon-sound');
-const iconMute = document.getElementById('icon-mute');
-let muted = false;
-
-if (audio) audio.volume = 0.05;
-
-// Browsers block autoplay until a user gesture — start on first interaction
-const startAudio = () => {
-  if (audio) audio.play().catch(() => {});
-  document.removeEventListener('click', startAudio);
-  document.removeEventListener('scroll', startAudio);
-  document.removeEventListener('keydown', startAudio);
-};
-document.addEventListener('click', startAudio);
-document.addEventListener('scroll', startAudio);
-document.addEventListener('keydown', startAudio);
-
-if (btn) btn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  muted = !muted;
-  if (audio) audio.muted = muted;
-  iconSound.style.display = muted ? 'none' : '';
-  iconMute.style.display = muted ? '' : 'none';
-  if (!muted && audio) audio.play().catch(() => {});
-});
+const ANCHOR_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "cp1":    { "x":  0, "y":  4.5, "z":  2.5 },
+  "cp-art": { "x":  0,   "y":  7,   "z":  8   },
+  "cp2":    { "x": -6.5, "y": 10,   "z":  9   },
+  "cp3":    { "x": -12,  "y": 16,   "z": -5   },
+  "cp4":    { "x":  6,   "y": 20.5, "z": -4.5 },
+  "cp2b":   { "x":  9,   "y": 10,   "z": -7   },
+  "cp3b":   { "x": 11,   "y": 16,   "z":  5   }
+}/*EDITMODE-END*/;
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="scene.js"></script>
+<script src="ui.js"></script>
 </body>
 </html>
