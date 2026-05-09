@@ -44,7 +44,9 @@ function initInkCursor() {
   window.addEventListener('resize', resizeCursorCanvas);
   const nodes = [];
   let lastX = null, lastY = null, targetX = 0, targetY = 0, dropX = 0, dropY = 0, dropVisible = false;
+  let isHovering = false, hoverT = 0;
   const TTL = 320, MAX_R = 4, MAX_DOT_GAP = 8, N_BLOB = 10;
+
   const addPoint = (x, y, t) => {
     if (lastX !== null) {
       const dx = x - lastX, dy = y - lastY, dist = Math.hypot(dx, dy);
@@ -60,37 +62,72 @@ function initInkCursor() {
     if (nodes.length > 400) nodes.splice(0, nodes.length - 400);
     lastX = x; lastY = y;
   };
+
   window.addEventListener('pointermove', (e) => {
     targetX = e.clientX; targetY = e.clientY;
     if (!dropVisible) { dropX = targetX; dropY = targetY; dropVisible = true; }
     addPoint(targetX, targetY, performance.now());
   });
+
+  document.addEventListener('pointerover', (e) => {
+    const el = e.target.closest('a, button, [role="button"], .cp-item, .art-frame, .cp-marker, #mute-btn, #modal-close');
+    isHovering = !!el;
+  });
+
   const draw = () => {
     const now = performance.now(), t = now * 0.001;
     ctx.clearRect(0, 0, c.width / dpr, c.height / dpr);
+
+    hoverT += ((isHovering ? 1 : 0) - hoverT) * 0.12;
+
     while (nodes.length && now - nodes[0].born > TTL) nodes.shift();
+
+    const trailAlpha = 1 - hoverT * 0.85;
     for (let i = 1; i < nodes.length; i++) {
       const b = nodes[i], age = (now - b.born) / TTL, w = MAX_R * 2 * Math.pow(1 - age, 0.6);
       if (w < 0.4) continue;
-      ctx.strokeStyle = `rgba(16,18,22,${(1 - age) * 0.9})`;
+      ctx.strokeStyle = `rgba(16,18,22,${(1 - age) * 0.9 * trailAlpha})`;
       ctx.lineWidth = w;
       ctx.beginPath();
       ctx.moveTo(nodes[i - 1].x, nodes[i - 1].y);
       ctx.lineTo(b.x, b.y);
       ctx.stroke();
     }
+
     if (dropVisible) {
       dropX = targetX; dropY = targetY;
-      ctx.beginPath();
-      for (let i = 0; i < N_BLOB; i++) {
-        const a = (i / N_BLOB) * Math.PI * 2;
-        const r = MAX_R * (1 + (Math.sin(a * 2 + t * 2.2) * 0.13));
-        ctx.lineTo(dropX + Math.cos(a) * r, dropY + Math.sin(a) * r);
+
+      // ink blob (fades out on hover)
+      const blobAlpha = 1 - hoverT;
+      if (blobAlpha > 0.01) {
+        ctx.beginPath();
+        for (let i = 0; i < N_BLOB; i++) {
+          const a = (i / N_BLOB) * Math.PI * 2;
+          const r = MAX_R * (1 + (Math.sin(a * 2 + t * 2.2) * 0.13));
+          ctx.lineTo(dropX + Math.cos(a) * r, dropY + Math.sin(a) * r);
+        }
+        ctx.closePath();
+        ctx.fillStyle = `rgba(14,16,20,${0.94 * blobAlpha})`;
+        ctx.fill();
       }
-      ctx.closePath();
-      ctx.fillStyle = 'rgba(14,16,20,0.94)';
-      ctx.fill();
+
+      // open ring (fades in and expands on hover)
+      if (hoverT > 0.01) {
+        const ringR = MAX_R + hoverT * 16;
+        ctx.beginPath();
+        ctx.arc(dropX, dropY, ringR, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(14,16,20,${0.55 * hoverT})`;
+        ctx.lineWidth = 1 + hoverT * 0.5;
+        ctx.stroke();
+
+        // small solid dot at center stays visible
+        ctx.beginPath();
+        ctx.arc(dropX, dropY, 2 * (1 - hoverT * 0.5), 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(14,16,20,${0.7 * hoverT})`;
+        ctx.fill();
+      }
     }
+
     requestAnimationFrame(draw);
   };
   draw();
@@ -210,8 +247,7 @@ createBirdCluster(4, 0, 2); createBirdCluster(-5, -1, 4);
 
 // --- ASSET LOADER ---
 let trail = null;
-let panda = null, pandaMixer = null, surfaceCurve = null;
-const pandaClock = new THREE.Clock();
+let surfaceCurve = null;
 const TRAIL_N = 120;
 const loader = new THREE.TextureLoader();
 loader.load(HM_FILE, (heightTex) => {
@@ -365,13 +401,13 @@ loader.load(HM_FILE, (heightTex) => {
   // --- SPIRAL MOUNTAIN TRAIL ---
   const surfacePoints = [];
   const GEOM_SIZE = 24.0;
-  const SPIRAL_TURNS = 0.9;
+  const SPIRAL_TURNS = .9;
   const START_RADIUS = 6.0;
   const END_RADIUS = 0.0;
 
   for (let i = 0; i < TRAIL_N; i++) {
     const f = i / (TRAIL_N - 1);
-    const angle = f * Math.PI * 2 * SPIRAL_TURNS;
+    const angle = Math.PI * 0.25 + f * Math.PI * 2 * SPIRAL_TURNS;
     const radius = THREE.MathUtils.lerp(START_RADIUS, END_RADIUS, f);
     const sx = Math.cos(angle) * radius;
     const sz = Math.sin(angle) * radius;
@@ -390,22 +426,6 @@ loader.load(HM_FILE, (heightTex) => {
   trail.renderOrder = 0;
   scene.add(trail);
 
-  // Load pig GLB
-  const gltfManager = new THREE.LoadingManager();
-  gltfManager.setURLModifier((url) => {
-    if (url.includes('Textures/')) return url.replace(/.*Textures\//, 'Textures/');
-    return url;
-  });
-  const gltfLoader = new THREE.GLTFLoader(gltfManager);
-  gltfLoader.load('animal-pig.glb', (gltf) => {
-    panda = gltf.scene;
-    panda.scale.setScalar(0.4);
-    scene.add(panda);
-    if (gltf.animations && gltf.animations.length) {
-      pandaMixer = new THREE.AnimationMixer(panda);
-      pandaMixer.clipAction(gltf.animations[0]).play();
-    }
-  }, undefined, (err) => { console.error('GLB failed:', err); });
 });
 
 const camPath = new THREE.CatmullRomCurve3([
@@ -432,9 +452,10 @@ function remapScroll(raw) {
   return 0.99;
 }
 
-const ANCHORS = ['cp1', 'cp-art', 'cp2', 'cp3', 'cp4', 'cp2b', 'cp3b'];
+const ANCHORS = ['cp1', 'cp-github', 'cp-art', 'cp2', 'cp3', 'cp4', 'cp2b', 'cp3b'];
 const ANCHOR_ZONES = {
-  'cp1':    [-0.1, 0.20],
+  'cp1':       [-0.1, 0.20],
+  'cp-github': [-0.1, 0.20],
   'cp-art': [0.20, 0.40],
   'cp3':    [0.40, 0.60],
   'cp3b':   [0.40, 0.60],
@@ -458,8 +479,8 @@ function updateAnchors() {
       opacity = Math.min(fadeIn, fadeOut);
     }
     el.style.opacity = opacity.toFixed(3);
-    el.querySelectorAll('.cp-item').forEach(item => {
-      item.style.pointerEvents = opacity > 0 ? '' : 'none';
+    el.querySelectorAll('.cp-item, .art-frame, .art-col').forEach(item => {
+      item.style.pointerEvents = opacity > 0 ? 'auto' : 'none';
     });
   });
 }
@@ -476,16 +497,6 @@ function animate() {
 
   if (trail) trail.geometry.setDrawRange(0, Math.floor(scrollProgress * trail.geometry.index.count));
 
-  const delta = pandaClock.getDelta();
-  if (panda && surfaceCurve) {
-    const t = THREE.MathUtils.clamp(scrollProgress, 0.001, 0.998);
-    const pos = surfaceCurve.getPoint(t);
-    const tangent = surfaceCurve.getTangent(t);
-    panda.position.copy(pos);
-    panda.position.y += 0.18;
-    panda.lookAt(pos.clone().add(tangent));
-  }
-  if (pandaMixer) pandaMixer.update(delta);
 
   updateAnchors();
 

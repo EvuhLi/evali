@@ -20,29 +20,6 @@ function updateProgressBar(raw) {
   });
 }
 
-// ── CHECKPOINT TITLE ──
-const TITLE_ZONES = [
-  { start: -0.1, end: 0.20, text: 'About' },
-  { start: 0.20, end: 0.40, text: 'Art' },
-  { start: 0.40, end: 0.60, text: 'Projects' },
-  { start: 0.60, end: 0.80, text: 'Experience' },
-  { start: 0.80, end: 1.10, text: 'Connect' },
-];
-const titleEl = document.getElementById('checkpoint-title');
-let _lastTitle = '';
-function updateCheckpointTitle(raw) {
-  const fade = 0.08;
-  const zone = TITLE_ZONES.find(z => raw >= z.start && raw < z.end);
-  if (!zone) { titleEl.style.opacity = '0'; return; }
-  if (zone.text !== _lastTitle) {
-    _lastTitle = zone.text;
-    titleEl.textContent = zone.text;
-  }
-  const fadeIn  = Math.min((raw - zone.start) / fade, 1);
-  const fadeOut = Math.min((zone.end - raw) / fade, 1);
-  titleEl.style.opacity = Math.min(fadeIn, fadeOut).toFixed(3);
-}
-
 // ── MODAL ──
 const modalOverlay = document.getElementById('modal-overlay');
 const modalInner   = document.getElementById('modal-inner');
@@ -84,14 +61,48 @@ document.querySelectorAll('.cp-marker').forEach(m => {
 
 // ── SCROLL ──
 updateProgressBar(0);
-updateCheckpointTitle(0);
 
 window.addEventListener('scroll', () => {
   scrollProgress = window.scrollY / (document.body.scrollHeight - window.innerHeight);
   updateProgressBar(scrollProgress);
-  updateCheckpointTitle(scrollProgress);
 });
 
+
+// ── GITHUB STATS ──
+(async function fetchGithubStats() {
+  const GITHUB_USER = 'EvuhLi';
+  try {
+    const [user, repos, commitSearch] = await Promise.all([
+      fetch(`https://api.github.com/users/${GITHUB_USER}`).then(r => r.json()),
+      fetch(`https://api.github.com/users/${GITHUB_USER}/repos?per_page=100`).then(r => r.json()),
+      fetch(`https://api.github.com/search/commits?q=author:${GITHUB_USER}&per_page=1`, {
+        headers: { Accept: 'application/vnd.github.cloak-preview+json' }
+      }).then(r => r.json()),
+    ]);
+
+    if (typeof user.public_repos === 'number')
+      document.getElementById('gh-repos').textContent = user.public_repos;
+
+    if (typeof commitSearch.total_count === 'number') {
+      const n = commitSearch.total_count;
+      document.getElementById('gh-commits').textContent = n >= 1000 ? (n / 1000).toFixed(1) + 'k' : n;
+    }
+
+    if (Array.isArray(repos)) {
+      const langBytes = {};
+      repos.forEach(r => {
+        if (r.language) langBytes[r.language] = (langBytes[r.language] || 0) + (r.size || 1);
+      });
+      const topLangs = Object.entries(langBytes).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([l]) => l);
+      document.getElementById('gh-langs').innerHTML =
+        topLangs.map(l => `<span class="gh-lang-pill">${l}</span>`).join('');
+    }
+
+    const now = new Date();
+    document.getElementById('gh-updated').textContent =
+      `live · ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  } catch (_) {}
+})();
 
 // ── AUDIO ──
 (function () {

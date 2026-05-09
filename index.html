@@ -8,24 +8,46 @@
 <body>
 <div id="scroll-space"></div>
 
-<!-- Checkpoint title — top right, changes per section -->
-<div id="checkpoint-title">About</div>
-
 <!-- Side cards: each .cp-item is a small clickable name card -->
 
 <div class="cp-text" id="cp1">
-  <h2>Evangeline Li</h2>
-  <p class="cp-subtitle">CMU · Information Systems &amp; Computer Science · </p>
-  <p>Builder, artist, and soccer player. I make things that are both functional and beautiful. Got something in mind? Let's build it.</p>
-  <div class="cp-divider"></div>
-  <p>Currently interning at CTAT, TAing 15-122, and researching privacy systems at CMU SCS.</p>
-  <p class="cp-links">
-    <a href="/cdn-cgi/l/email-protection#94f8fdf1e2f5edfdf2f5fad4f3f9f5fdf8baf7fbf9">lievayifan@gmail.com</a>
-    <span class="cp-sep">·</span>
+  <div class="about-header">
+    <h2>Evangeline<br>Li</h2>
+    <div class="about-rule"></div>
+  </div>
+  <p class="about-bio">Studying Information Systems and Computer Science at CMU, graduating 2028. I'm really into ed-tech, privacy, and AI. I like building things that actually make people's lives better, but also cooler.</p>
+  <div class="about-status">
+    <span class="about-status-dot"></span>
+    <span>Interning at CTAT &thinsp;·&thinsp; TAing 15-122 &thinsp;·&thinsp; Researching @ CMU SCS</span>
+  </div>
+  <div class="about-links">
+    <a href="/cdn-cgi/l/email-protection#94f8fdf1e2f5edfdf2f5fad4f3f9f5fad4f3f9f5fdf8baf7fbf9">Email</a>
+    <span class="about-links-sep"></span>
     <a href="https://github.com/EvuhLi" target="_blank" rel="noopener">GitHub</a>
-    <span class="cp-sep">·</span>
+    <span class="about-links-sep"></span>
     <a href="https://www.linkedin.com/in/evangeline-li-85704619a/" target="_blank" rel="noopener">LinkedIn</a>
-  </p>
+  </div>
+</div>
+
+<div class="cp-text" id="cp-github">
+  <div class="gh-header">
+    <svg class="gh-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+    <span class="gh-title">@EvuhLi</span>
+  </div>
+  <div class="gh-rule"></div>
+  <div class="gh-stats">
+    <div class="gh-stat">
+      <span class="gh-stat-val" id="gh-repos">—</span>
+      <span class="gh-stat-key">repos</span>
+    </div>
+    <div class="gh-stat">
+      <span class="gh-stat-val" id="gh-commits">—</span>
+      <span class="gh-stat-key">commits</span>
+    </div>
+  </div>
+  <div class="gh-langs-label">languages</div>
+  <div class="gh-langs" id="gh-langs"></div>
+  <div class="gh-updated" id="gh-updated"></div>
 </div>
 
 <div class="cp-text" id="cp-art">
@@ -53,6 +75,13 @@
       <div class="art-frame"><img src="Photos-3-001/8dfea5e534a81dc823022502bb8f1044.jpg" alt=""></div>
     </div>
   </div>
+  <!-- center decorative strip -->
+  <div class="art-center">
+    <div class="art-center-line"></div>
+    <span class="art-center-label">Works</span>
+    <div class="art-center-line"></div>
+  </div>
+
   <!-- right column — scrolls up -->
   <div class="art-col" id="art-col-right">
     <div class="art-track art-track--up">
@@ -136,14 +165,14 @@
 
 <div class="cp-text" id="cp3">
   <div class="cp-item cp-project">
-    <div class="cp-project-img"></div>
+    <div class="cp-project-img"><img src="project pics/Screenshot 2026-05-08 at 5.37.54 PM.png" alt=""></div>
     <div class="cp-project-body">
       <div class="cp-role">Loom</div>
       <div class="cp-place">React 19 · Vite · React Router · D3.js · Node.js · Express 5 · MongoDB · Mongoose · Render · reCAPTCHA v2</div>
       <div class="cp-desc">A social platform that fights AI art theft with real-time bot detection and community tools.</div>
     </div>
     <div class="cp-detail">
-      <div class="cp-modal-img"></div>
+      <div class="cp-modal-img"><img src="project pics/Screenshot 2026-05-08 at 5.37.54 PM.png" alt=""></div>
       <ul>
         <li>Built a production-ready full-stack social platform that prevents AI web-scraping of art — React/Vite, Node/Express REST API, MongoDB schemas for users, posts, and communities.</li>
         <li>Developed a Python AI/ML microservice using the OpenAI API for bot detection, content tagging, and personalized recommendations.</li>
@@ -153,18 +182,18 @@
     </div>
   </div>
   <div class="cp-item cp-project">
-    <div class="cp-project-img"></div>
+    <div class="cp-project-img"><img src="project pics/Screenshot 2026-05-08 at 6.03.06 PM.png" alt=""></div>
     <div class="cp-project-body">
       <div class="cp-role">Minecraft Live</div>
-      <div class="cp-place">Python · MediaPipe · WebSockets · Neural Inference</div>
-      <div class="cp-desc">Control Minecraft with your full body — pose detection translated to low-latency game input.</div>
+      <div class="cp-place">Python · OpenCV · MediaPipe · WebSockets · asyncio · pynput · pyautogui · Vanilla JS · SSL/WSS</div>
+      <div class="cp-desc">Control Minecraft with your full body — real-time pose and hand tracking translated to low-latency game input.</div>
     </div>
     <div class="cp-detail">
-      <div class="cp-modal-img"></div>
+      <div class="cp-modal-img"><img src="project pics/Screenshot 2026-05-08 at 6.03.06 PM.png" alt=""></div>
       <ul>
-        <li>Real-time full-body motion control for Minecraft — Python + MediaPipe translating pose and head orientation into low-latency keyboard/mouse input via neural-network inference.</li>
-        <li>Cross-platform mobile companion controller over async WebSockets/UDP with drift calibration and dead-zone filtering for stable input.</li>
-        <li>State machine for input injection that handles sprint toggling, inventory, and interaction sequencing with safety thresholds.</li>
+        <li>Built a gesture-controlled Minecraft interface: OpenCV captures webcam video, MediaPipe runs real-time pose and hand landmark detection, and pynput/pyautogui translate body movements into keyboard and mouse input.</li>
+        <li>Architected an async Python server (asyncio + http.server) streaming tracking data over secure WebSockets (WSS/SSL) to a Vanilla JS frontend client.</li>
+        <li>Self-signed SSL certificate enables HTTPS/WSS locally so the browser can access the webcam — no external dependencies required.</li>
         <li class="cp-link-li"><a href="https://github.com/EvuhLi/MinecraftLive" target="_blank" rel="noopener">View on GitHub →</a></li>
       </ul>
     </div>
@@ -173,14 +202,14 @@
 
 <div class="cp-text" id="cp3b">
   <div class="cp-item cp-project">
-    <div class="cp-project-img"></div>
+    <div class="cp-project-img"><img src="project pics/Screenshot 2026-05-08 at 5.58.09 PM.png" alt=""></div>
     <div class="cp-project-body">
       <div class="cp-role">Sparrow</div>
-      <div class="cp-place">React · MongoDB · HTML/CSS · Adobe Illustrator</div>
+      <div class="cp-place">React · MongoDB · HTML/CSS · Node.js · Adobe Illustrator</div>
       <div class="cp-desc">A full-stack app teaching kids Java through visual block coding with custom character animations.</div>
     </div>
     <div class="cp-detail">
-      <div class="cp-modal-img"></div>
+      <div class="cp-modal-img"><img src="project pics/Screenshot 2026-05-08 at 5.58.09 PM.png" alt=""></div>
       <ul>
         <li>Full-stack educational app teaching children Java through visual block coding and interactive lessons.</li>
         <li>Character animations, customization systems, and site layout designed in Adobe Illustrator and After Effects.</li>
@@ -190,14 +219,14 @@
     </div>
   </div>
   <div class="cp-item cp-project">
-    <div class="cp-project-img"></div>
+    <div class="cp-project-img"><img src="project pics/Screenshot 2026-05-08 at 6.07.53 PM.png" alt=""></div>
     <div class="cp-project-body">
       <div class="cp-role">Azul Tile</div>
       <div class="cp-place">Java</div>
       <div class="cp-desc">A fully playable digital version of the Azul board game, built from scratch in Java.</div>
     </div>
     <div class="cp-detail">
-      <div class="cp-modal-img"></div>
+      <div class="cp-modal-img"><img src="project pics/Screenshot 2026-05-08 at 6.07.53 PM.png" alt=""></div>
       <ul>
         <li>Built the complete game engine from scratch in Java, covering tile drafting, factory displays, pattern lines, and scoring logic.</li>
         <li>Integrated Lottie animations for a polished visual experience.</li>
@@ -249,7 +278,6 @@
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="scene.js"></script>
 <script src="ui.js"></script>
 </body>
