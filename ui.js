@@ -59,6 +59,24 @@ document.querySelectorAll('.cp-marker').forEach(m => {
   });
 });
 
+// ── SCROLL HINT ──
+(function () {
+  const hint = document.getElementById('scroll-hint');
+  if (!hint) return;
+  const dismiss = () => {
+    hint.style.animation = 'none';
+    hint.style.transition = 'opacity 0.18s ease';
+    hint.style.opacity = '0';
+    setTimeout(() => hint.remove(), 200);
+    window.removeEventListener('scroll',    dismiss);
+    window.removeEventListener('wheel',     dismiss);
+    window.removeEventListener('touchmove', dismiss);
+  };
+  window.addEventListener('scroll',    dismiss, { passive: true });
+  window.addEventListener('wheel',     dismiss, { passive: true });
+  window.addEventListener('touchmove', dismiss, { passive: true });
+})();
+
 // ── SCROLL ──
 updateProgressBar(0);
 
@@ -134,9 +152,9 @@ window.addEventListener('scroll', () => {
     el.addEventListener('input', () => clearError(el));
   });
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (btn.classList.contains('sent')) return;
+    if (btn.classList.contains('sent') || btn.classList.contains('loading')) return;
 
     const emailEl = document.getElementById('cf-email');
     const msgEl   = document.getElementById('cf-msg');
@@ -152,17 +170,36 @@ window.addEventListener('scroll', () => {
     }
     if (!valid) return;
 
-    // wire up your own endpoint / Formspree here if needed
-    // const data = new FormData(form);
-    // await fetch('https://formspree.io/f/YOUR_ID', { method: 'POST', body: data, headers: { Accept: 'application/json' } });
-
-    btn.classList.add('sent');
+    btn.classList.add('loading');
     btn.disabled = true;
-    setTimeout(() => {
-      form.reset();
-      btn.classList.remove('sent');
+
+    try {
+      const res = await fetch('https://formspree.io/f/xjglaajj', {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { Accept: 'application/json' },
+      });
+      if (!res.ok) throw new Error('Network response was not ok');
+      btn.classList.remove('loading');
+      btn.classList.add('sent');
+      setTimeout(() => {
+        form.reset();
+        btn.classList.remove('sent');
+        btn.disabled = false;
+      }, 3200);
+    } catch (_) {
+      btn.classList.remove('loading');
       btn.disabled = false;
-    }, 3200);
+      let err = form.querySelector('.connect-submit-error');
+      if (!err) {
+        err = document.createElement('p');
+        err.className = 'connect-submit-error connect-error';
+        err.style.textAlign = 'center';
+        err.style.marginTop = '8px';
+        btn.after(err);
+      }
+      err.textContent = 'Something went wrong — try emailing directly.';
+    }
   });
 })();
 
@@ -179,32 +216,3 @@ window.addEventListener('scroll', () => {
   });
 })();
 
-// ── AUDIO ──
-(function () {
-  const audio     = document.getElementById('bg-music');
-  const btn       = document.getElementById('mute-btn');
-  const iconSound = document.getElementById('icon-sound');
-  const iconMute  = document.getElementById('icon-mute');
-  let muted = false;
-
-  if (audio) audio.volume = 0.05;
-
-  const startAudio = () => {
-    if (audio) audio.play().catch(() => {});
-    document.removeEventListener('click',   startAudio);
-    document.removeEventListener('scroll',  startAudio);
-    document.removeEventListener('keydown', startAudio);
-  };
-  document.addEventListener('click',   startAudio);
-  document.addEventListener('scroll',  startAudio);
-  document.addEventListener('keydown', startAudio);
-
-  if (btn) btn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    muted = !muted;
-    if (audio) audio.muted = muted;
-    iconSound.style.display = muted ? 'none' : '';
-    iconMute.style.display  = muted ? ''     : 'none';
-    if (!muted && audio) audio.play().catch(() => {});
-  });
-})();

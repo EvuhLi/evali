@@ -465,23 +465,31 @@ canvas { display: block; position: fixed; top: 0; left: 0; width: 100vw !importa
 
 .cp-item .cp-role {
   font-family: 'Playfair Display', Georgia, serif;
-  font-size: 14px;
-  font-weight: 600;
-  color: rgba(45,45,45,0.92);
-  letter-spacing: 0.01em;
-  line-height: 1.4;
-  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1410;
+  letter-spacing: 0.03em;
+  line-height: 1.3;
+  margin-bottom: 5px;
 }
 
-/* show date/place on experience cards; hide on project cards */
-.cp-item:not(.cp-project) .cp-place {
-  display: block;
+/* date line on experience cards */
+.cp-exp-date {
   font-family: 'Inter', 'Helvetica Neue', sans-serif;
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 400;
-  letter-spacing: 0.01em;
-  color: rgba(45,45,45,0.52);
-  line-height: 1.70;
+  letter-spacing: 0.06em;
+  color: rgba(45,45,45,0.42);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+/* tech pills row on experience cards */
+.cp-item:not(.cp-project) .cp-place {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 0;
 }
 .cp-item .cp-detail { display: none; }
 
@@ -718,6 +726,52 @@ canvas { display: block; position: fixed; top: 0; left: 0; width: 100vw !importa
   margin-right: 6px;
 }
 
+/* ── SCROLL HINT ── */
+@keyframes scroll-hint-fade-in {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.96); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes scroll-hint-bob {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(6px); }
+}
+
+#scroll-hint {
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  pointer-events: none;
+  animation: scroll-hint-fade-in 1s cubic-bezier(0.23,1,0.32,1) 1s both;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+#scroll-hint.hidden {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.97);
+}
+
+.scroll-hint-text {
+  font-family: 'Inter', 'Helvetica Neue', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.30em;
+  text-transform: uppercase;
+  color: rgba(26,20,16,0.82);
+}
+
+.scroll-hint-arrow {
+  width: 22px;
+  height: 22px;
+  color: rgba(26,20,16,0.70);
+  animation: scroll-hint-bob 1.8s ease-in-out infinite;
+}
+
 /* ── PROGRESS BAR ── */
 #progress-bar {
   position: fixed; bottom: 36px; left: 50%;
@@ -756,18 +810,6 @@ canvas { display: block; position: fixed; top: 0; left: 0; width: 100vw !importa
 .cp-marker.active .cp-label { color: #1a1410; font-weight: 600; }
 
 /* ── MUTE BUTTON ── */
-#mute-btn {
-  position: fixed; bottom: 28px; right: 28px;
-  z-index: 20; cursor: pointer;
-  background: rgba(249,247,242,0.7);
-  border: 1px solid rgba(26,20,16,0.15); border-radius: 50%;
-  padding: 0;
-  width: 36px; height: 36px;
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0.55; transition: opacity 0.3s, background 0.3s;
-}
-#mute-btn:hover { opacity: 1; background: rgba(249,247,242,0.95); }
-#mute-btn svg { width: 16px; height: 16px; fill: rgba(26,20,16,0.9); }
 
 /* ── CONNECT SECTION ── */
 #cp-connect-left {
@@ -778,7 +820,8 @@ canvas { display: block; position: fixed; top: 0; left: 0; width: 100vw !importa
 #cp-connect {
   left: auto;
   right: 5%;
-  max-width: 320px;
+  width: 400px;
+  max-width: 460px;
 }
 
 .connect-hero {
@@ -818,6 +861,7 @@ canvas { display: block; position: fixed; top: 0; left: 0; width: 100vw !importa
 }
 
 .connect-card {
+  width: 100%;
   background: rgba(255,255,255,0.38);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
@@ -934,11 +978,13 @@ canvas { display: block; position: fixed; top: 0; left: 0; width: 100vw !importa
 }
 
 .connect-submit-label,
+.connect-submit-sending,
 .connect-submit-ok {
   display: block;
   transition: transform 0.4s cubic-bezier(0.23,1,0.32,1), opacity 0.4s ease;
 }
 
+.connect-submit-sending,
 .connect-submit-ok {
   position: absolute;
   inset: 0;
@@ -949,7 +995,18 @@ canvas { display: block; position: fixed; top: 0; left: 0; width: 100vw !importa
   opacity: 0;
 }
 
-.connect-submit.sent .connect-submit-label {
+.connect-submit.loading .connect-submit-label {
+  transform: translateY(-120%);
+  opacity: 0;
+}
+
+.connect-submit.loading .connect-submit-sending {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.connect-submit.sent .connect-submit-label,
+.connect-submit.sent .connect-submit-sending {
   transform: translateY(-120%);
   opacity: 0;
 }

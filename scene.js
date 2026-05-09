@@ -71,7 +71,7 @@ function initInkCursor() {
   });
 
   document.addEventListener('pointerover', (e) => {
-    const el = e.target.closest('a, button, [role="button"], .cp-item, .art-frame, .cp-marker, #mute-btn, #modal-close');
+    const el = e.target.closest('a, button, [role="button"], .cp-item, .art-frame, .cp-marker, #modal-close');
     isHovering = !!el;
   });
 
@@ -507,7 +507,7 @@ loader.load(HM_FILE, (heightTex) => {
   texCtx.save();
   texCtx.translate(512, 0);
   texCtx.scale(-1, 1);
-  texCtx.font = '700 88px "Playfair Display", Georgia, serif';
+  texCtx.font = '600 88px "Inter", "Helvetica Neue", sans-serif';
   texCtx.textAlign = 'center';
   texCtx.textBaseline = 'middle';
   texCtx.fillStyle = 'rgba(249,247,242,0.92)';
@@ -614,7 +614,7 @@ loader.load(HM_FILE, (heightTex) => {
   tc2.save();
   tc2.translate(512, 0);
   tc2.scale(-1, 1);
-  tc2.font = '700 62px "Playfair Display", Georgia, serif';
+  tc2.font = '600 62px "Inter", "Helvetica Neue", sans-serif';
   tc2.textAlign = 'center';
   tc2.textBaseline = 'middle';
   tc2.fillStyle = 'rgba(249,247,242,0.92)';
@@ -696,7 +696,7 @@ loader.load(HM_FILE, (heightTex) => {
   tc3.save();
   tc3.translate(512, 0);
   tc3.scale(-1, 1);
-  tc3.font = '700 88px "Playfair Display", Georgia, serif';
+  tc3.font = '600 88px "Inter", "Helvetica Neue", sans-serif';
   tc3.textAlign = 'center';
   tc3.textBaseline = 'middle';
   tc3.fillStyle = 'rgba(249,247,242,0.92)';
@@ -747,7 +747,7 @@ loader.load(HM_FILE, (heightTex) => {
   tc4.save();
   tc4.translate(512, 0);
   tc4.scale(-1, 1);
-  tc4.font = '700 88px "Playfair Display", Georgia, serif';
+  tc4.font = '600 88px "Inter", "Helvetica Neue", sans-serif';
   tc4.textAlign = 'center';
   tc4.textBaseline = 'middle';
   tc4.fillStyle = 'rgba(249,247,242,0.92)';
@@ -799,7 +799,7 @@ loader.load(HM_FILE, (heightTex) => {
   tc5.save();
   tc5.translate(512, 0);
   tc5.scale(-1, 1);
-  tc5.font = '700 72px "Playfair Display", Georgia, serif';
+  tc5.font = '600 72px "Inter", "Helvetica Neue", sans-serif';
   tc5.textAlign = 'center';
   tc5.textBaseline = 'middle';
   tc5.fillStyle = 'rgba(249,247,242,0.92)';
@@ -814,17 +814,6 @@ loader.load(HM_FILE, (heightTex) => {
     vertexShader: expFlagVert, fragmentShader: expFlagFrag,
     transparent: true, side: THREE.DoubleSide,
   });
-
-  // Axis arrows at projects flag pole — origin at pole tip (X = red, Z = blue)
-  const ARROW_LEN = 1.2, ARROW_HEAD = 0.25, ARROW_SHAFT = 0.04;
-  const axisOrigin = new THREE.Vector3(0, POLE_H, 0);
-  const xArrow = new THREE.ArrowHelper(
-    new THREE.Vector3(1, 0, 0), axisOrigin, ARROW_LEN, 0xff2222, ARROW_HEAD, ARROW_SHAFT
-  );
-  const zArrow = new THREE.ArrowHelper(
-    new THREE.Vector3(0, 0, 1), axisOrigin, ARROW_LEN, 0x2244ff, ARROW_HEAD, ARROW_SHAFT
-  );
-  projFlagGroup.add(xArrow, zArrow);
 
   const projFlagMesh = new THREE.Mesh(new THREE.PlaneGeometry(FLAG_W, FLAG_H, 40, 20), flagMat5);
   projFlagMesh.rotation.y = Math.PI / 2;
