@@ -45,6 +45,7 @@ function initInkCursor() {
   const nodes = [];
   let lastX = null, lastY = null, targetX = 0, targetY = 0, dropX = 0, dropY = 0, dropVisible = false;
   let isHovering = false, hoverT = 0;
+  let isTyping = false, typingT = 0;
   const TTL = 320, MAX_R = 4, MAX_DOT_GAP = 8, N_BLOB = 10;
 
   const addPoint = (x, y, t) => {
@@ -74,15 +75,21 @@ function initInkCursor() {
     isHovering = !!el;
   });
 
+  document.addEventListener('focusin',    (e) => { if (e.target.matches('input, textarea')) isTyping = true; });
+  document.addEventListener('focusout',   (e) => { if (e.target.matches('input, textarea')) isTyping = false; });
+  document.addEventListener('pointerover', (e) => { if (e.target.matches('input, textarea')) isTyping = true; });
+  document.addEventListener('pointerout',  (e) => { if (e.target.matches('input, textarea') && !e.target.matches(':focus')) isTyping = false; });
+
   const draw = () => {
     const now = performance.now(), t = now * 0.001;
     ctx.clearRect(0, 0, c.width / dpr, c.height / dpr);
 
-    hoverT += ((isHovering ? 1 : 0) - hoverT) * 0.12;
+    hoverT  += ((isHovering ? 1 : 0) - hoverT)  * 0.12;
+    typingT += ((isTyping   ? 1 : 0) - typingT)  * 0.08;
 
     while (nodes.length && now - nodes[0].born > TTL) nodes.shift();
 
-    const trailAlpha = 1 - hoverT * 0.85;
+    const trailAlpha = (1 - hoverT * 0.85) * (1 - typingT * 0.95);
     for (let i = 1; i < nodes.length; i++) {
       const b = nodes[i], age = (now - b.born) / TTL, w = MAX_R * 2 * Math.pow(1 - age, 0.6);
       if (w < 0.4) continue;
@@ -97,8 +104,7 @@ function initInkCursor() {
     if (dropVisible) {
       dropX = targetX; dropY = targetY;
 
-      // ink blob (fades out on hover)
-      const blobAlpha = 1 - hoverT;
+      const blobAlpha = (1 - hoverT) * (1 - typingT);
       if (blobAlpha > 0.01) {
         ctx.beginPath();
         for (let i = 0; i < N_BLOB; i++) {
@@ -111,20 +117,51 @@ function initInkCursor() {
         ctx.fill();
       }
 
-      // open ring (fades in and expands on hover)
+      // open ring on hover (suppressed while typing)
       if (hoverT > 0.01) {
+        const ringAlpha = hoverT * (1 - typingT * 0.9);
         const ringR = MAX_R + hoverT * 16;
         ctx.beginPath();
         ctx.arc(dropX, dropY, ringR, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(14,16,20,${0.55 * hoverT})`;
+        ctx.strokeStyle = `rgba(14,16,20,${0.55 * ringAlpha})`;
         ctx.lineWidth = 1 + hoverT * 0.5;
         ctx.stroke();
 
-        // small solid dot at center stays visible
         ctx.beginPath();
         ctx.arc(dropX, dropY, 2 * (1 - hoverT * 0.5), 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(14,16,20,${0.7 * hoverT})`;
+        ctx.fillStyle = `rgba(14,16,20,${0.7 * ringAlpha})`;
         ctx.fill();
+      }
+
+      // typing cursor: blinking editorial caret in accent red
+      if (typingT > 0.01) {
+        const blink = 0.5 + 0.5 * Math.sin(t * Math.PI * 2 * 1.1);
+        const caretAlpha = typingT * (0.35 + 0.65 * blink);
+        const barH = 22 * typingT;
+        const serifW = 5 * typingT;
+
+        ctx.strokeStyle = `rgba(139,0,0,${caretAlpha})`;
+        ctx.lineWidth = 1.5;
+        ctx.lineCap = 'round';
+
+        // vertical bar
+        ctx.beginPath();
+        ctx.moveTo(dropX, dropY - barH / 2);
+        ctx.lineTo(dropX, dropY + barH / 2);
+        ctx.stroke();
+
+        // top serif
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(dropX - serifW, dropY - barH / 2);
+        ctx.lineTo(dropX + serifW, dropY - barH / 2);
+        ctx.stroke();
+
+        // bottom serif
+        ctx.beginPath();
+        ctx.moveTo(dropX - serifW, dropY + barH / 2);
+        ctx.lineTo(dropX + serifW, dropY + barH / 2);
+        ctx.stroke();
       }
     }
 
@@ -248,6 +285,11 @@ createBirdCluster(4, 0, 2); createBirdCluster(-5, -1, 4);
 // --- ASSET LOADER ---
 let trail = null;
 let surfaceCurve = null;
+let flagMat = null;
+let flagMat2 = null;
+let flagMat3 = null;
+let flagMat4 = null;
+let flagMat5 = null;
 const TRAIL_N = 120;
 const loader = new THREE.TextureLoader();
 loader.load(HM_FILE, (heightTex) => {
@@ -426,6 +468,369 @@ loader.load(HM_FILE, (heightTex) => {
   trail.renderOrder = 0;
   scene.add(trail);
 
+  // --- FLAG AT PEAK ---
+  const peak = surfacePoints[surfacePoints.length - 1];
+
+  // Flagpole
+  const POLE_H = 1;
+  const poleGeo = new THREE.CylinderGeometry(0.03, 0.05, POLE_H, 8);
+  const poleMat = new THREE.MeshBasicMaterial({ color: 0x1a0f06 });
+  const pole = new THREE.Mesh(poleGeo, poleMat);
+  pole.position.y = POLE_H / 2; // local — relative to group
+  const connectFlag = new THREE.Group();
+  connectFlag.position.set(peak.x, peak.y, peak.z);
+  connectFlag.add(pole);
+  scene.add(connectFlag);
+
+  // CanvasTexture — "CONNECT" on parchment
+  const FLAG_W = 1.5, FLAG_H = .75;
+  const texC = document.createElement('canvas');
+  texC.width = 512; texC.height = 218;
+  const texCtx = texC.getContext('2d');
+
+  // trail red #B22222
+  const grad = texCtx.createLinearGradient(0, 0, 512, 218);
+  grad.addColorStop(0,   '#9e1c1c');
+  grad.addColorStop(0.5, '#B22222');
+  grad.addColorStop(1,   '#8e1818');
+  texCtx.fillStyle = grad;
+  texCtx.fillRect(0, 0, 512, 218);
+
+  // subtle grain lines
+  texCtx.strokeStyle = 'rgba(255,220,200,0.06)';
+  texCtx.lineWidth = 1;
+  for (let y = 0; y < 218; y += 6) {
+    texCtx.beginPath(); texCtx.moveTo(0, y); texCtx.lineTo(512, y); texCtx.stroke();
+  }
+
+  // text — white on red
+  texCtx.save();
+  texCtx.translate(512, 0);
+  texCtx.scale(-1, 1);
+  texCtx.font = '700 88px "Playfair Display", Georgia, serif';
+  texCtx.textAlign = 'center';
+  texCtx.textBaseline = 'middle';
+  texCtx.fillStyle = 'rgba(249,247,242,0.92)';
+  texCtx.fillText('CONNECT', 256, 109);
+  texCtx.strokeStyle = 'rgba(249,247,242,0.30)';
+  texCtx.lineWidth = 1.5;
+  texCtx.beginPath(); texCtx.moveTo(60, 155); texCtx.lineTo(452, 155); texCtx.stroke();
+  texCtx.restore();
+
+  const flagTex = new THREE.CanvasTexture(texC);
+
+  // Flag shaders
+  const flagVert = `
+    uniform float uTime;
+    uniform float uAmplitude;
+    uniform float uFrequency;
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      vec3 pos = position;
+      // dual sine for organic, non-robotic wind — anchored at uv.x = 0 (left/pole side)
+      float wave = sin(pos.x * uFrequency + uTime)
+                 + sin(pos.x * uFrequency * 1.5 + uTime * 1.2);
+      float anchor = 1.0 - vUv.x; // 0 at pole, 1 at free end
+      pos.z += wave * anchor * uAmplitude;
+      // slight vertical breathe
+      pos.y += sin(pos.x * uFrequency * 0.9 + uTime * 0.85) * anchor * uAmplitude * 0.12;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+    }
+  `;
+
+  const flagFrag = `
+    uniform sampler2D uTexture;
+    varying vec2 vUv;
+    void main() {
+      vec4 tex = texture2D(uTexture, vUv);
+      vec3 red = vec3(0.698, 0.133, 0.133); // #B22222 — trail red
+      vec3 color = mix(red, tex.rgb, 0.92);
+
+      // torn / hand-cut edge: high-freq sine noise on each border
+      float nx = sin(vUv.y * 31.0) * 0.014 + sin(vUv.y * 67.0) * 0.007;
+      float ny = sin(vUv.x * 27.0) * 0.013 + sin(vUv.x * 53.0) * 0.008;
+      float edgeL = smoothstep(0.00 + nx, 0.05 + nx, vUv.x);
+      float edgeR = smoothstep(1.00 - nx, 0.90 - nx, vUv.x);
+      float edgeB = smoothstep(0.00 + ny, 0.06 + ny, vUv.y);
+      float edgeT = smoothstep(1.00 - ny, 0.91 - ny, vUv.y);
+      float alpha = edgeL * edgeR * edgeB * edgeT;
+
+      // vignette darkening toward torn edges
+      float vign = 1.0 - (1.0 - edgeL) * 0.6 - (1.0 - edgeR) * 0.4;
+      color *= vign;
+
+      gl_FragColor = vec4(color, alpha * 0.96);
+    }
+  `;
+
+  flagMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime:      { value: 0.0 },
+      uAmplitude: { value: 0.16 },
+      uFrequency: { value: 2.8 },
+      uTexture:   { value: flagTex },
+    },
+    vertexShader:   flagVert,
+    fragmentShader: flagFrag,
+    transparent: true,
+    side: THREE.DoubleSide,
+  });
+
+  const flagGeo = new THREE.PlaneGeometry(FLAG_W, FLAG_H, 40, 20);
+  const flagMesh = new THREE.Mesh(flagGeo, flagMat);
+  flagMesh.rotation.y = 7 * Math.PI / 4;
+  flagMesh.position.set(-0.5, POLE_H - FLAG_H * 0.55, -FLAG_W / 2 + 0.3); // local — relative to group
+  connectFlag.add(flagMesh);
+
+  // --- EXPERIENCE FLAG — 70% along the trail ---
+  const expPoint = surfacePoints[Math.floor(0.70 * (TRAIL_N - 1))];
+
+  const expPole = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.03, 0.05, POLE_H, 8),
+    new THREE.MeshBasicMaterial({ color: 0x1a0f06 })
+  );
+  expPole.position.y = POLE_H / 2; // local — relative to group
+  const experienceFlag = new THREE.Group();
+  experienceFlag.position.set(expPoint.x - 1.1, expPoint.y - 3, expPoint.z - 0.8);
+  experienceFlag.add(expPole);
+  scene.add(experienceFlag);
+
+  // Canvas texture — "EXPERIENCE"
+  const texC2 = document.createElement('canvas');
+  texC2.width = 512; texC2.height = 218;
+  const tc2 = texC2.getContext('2d');
+  const grad2 = tc2.createLinearGradient(0, 0, 512, 218);
+  grad2.addColorStop(0,   '#9e1c1c');
+  grad2.addColorStop(0.5, '#B22222');
+  grad2.addColorStop(1,   '#8e1818');
+  tc2.fillStyle = grad2;
+  tc2.fillRect(0, 0, 512, 218);
+  tc2.strokeStyle = 'rgba(255,220,200,0.06)';
+  tc2.lineWidth = 1;
+  for (let yi = 0; yi < 218; yi += 6) {
+    tc2.beginPath(); tc2.moveTo(0, yi); tc2.lineTo(512, yi); tc2.stroke();
+  }
+  tc2.save();
+  tc2.translate(512, 0);
+  tc2.scale(-1, 1);
+  tc2.font = '700 62px "Playfair Display", Georgia, serif';
+  tc2.textAlign = 'center';
+  tc2.textBaseline = 'middle';
+  tc2.fillStyle = 'rgba(249,247,242,0.92)';
+  tc2.fillText('EXPERIENCE', 256, 105);
+  tc2.strokeStyle = 'rgba(249,247,242,0.30)';
+  tc2.lineWidth = 1.5;
+  tc2.beginPath(); tc2.moveTo(40, 150); tc2.lineTo(472, 150); tc2.stroke();
+  tc2.restore();
+  const flagTex2 = new THREE.CanvasTexture(texC2);
+
+  const expFlagVert = `
+    uniform float uTime; uniform float uAmplitude; uniform float uFrequency;
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      vec3 pos = position;
+      float anchor = 1.0 - vUv.x;
+      float wave = sin(pos.x * uFrequency + uTime) + sin(pos.x * uFrequency * 1.5 + uTime * 1.2);
+      pos.z += wave * anchor * uAmplitude;
+      pos.y += sin(pos.x * uFrequency * 0.9 + uTime * 0.85) * anchor * uAmplitude * 0.12;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+    }
+  `;
+  const expFlagFrag = `
+    uniform sampler2D uTexture;
+    varying vec2 vUv;
+    void main() {
+      vec4 tex = texture2D(uTexture, vUv);
+      vec3 red = vec3(0.698, 0.133, 0.133);
+      vec3 color = mix(red, tex.rgb, 0.92);
+      float nx = sin(vUv.y * 31.0) * 0.014 + sin(vUv.y * 67.0) * 0.007;
+      float ny = sin(vUv.x * 27.0) * 0.013 + sin(vUv.x * 53.0) * 0.008;
+      float alpha = smoothstep(0.00+nx,0.05+nx,vUv.x) * smoothstep(1.00-nx,0.90-nx,vUv.x)
+                  * smoothstep(0.00+ny,0.06+ny,vUv.y) * smoothstep(1.00-ny,0.91-ny,vUv.y);
+      gl_FragColor = vec4(color, alpha * 0.96);
+    }
+  `;
+  flagMat2 = new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0.0 }, uAmplitude: { value: 0.16 }, uFrequency: { value: 2.8 }, uTexture: { value: flagTex2 } },
+    vertexShader: expFlagVert, fragmentShader: expFlagFrag,
+    transparent: true, side: THREE.DoubleSide,
+  });
+
+  const expFlagGeo = new THREE.PlaneGeometry(FLAG_W, FLAG_H, 40, 20);
+  const expFlagMesh = new THREE.Mesh(expFlagGeo, flagMat2);
+  expFlagMesh.rotation.y = Math.PI / 4;
+  expFlagMesh.position.set(-0.5, POLE_H - FLAG_H * 0.55, -FLAG_W / 2 + 1.2); // local — relative to group
+  experienceFlag.add(expFlagMesh);
+
+
+  // --- ABOUT FLAG — start of trail ---
+  const aboutPoint = surfacePoints[0];
+
+  const aboutPole = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.03, 0.05, POLE_H, 8),
+    new THREE.MeshBasicMaterial({ color: 0x1a0f06 })
+  );
+  aboutPole.position.y = POLE_H / 2;
+  const aboutFlagGroup = new THREE.Group();
+  aboutFlagGroup.position.set(aboutPoint.x, aboutPoint.y, aboutPoint.z);
+  aboutFlagGroup.add(aboutPole);
+  scene.add(aboutFlagGroup);
+
+  // Canvas texture — "ABOUT"
+  const texC3 = document.createElement('canvas');
+  texC3.width = 512; texC3.height = 218;
+  const tc3 = texC3.getContext('2d');
+  const grad3 = tc3.createLinearGradient(0, 0, 512, 218);
+  grad3.addColorStop(0,   '#9e1c1c');
+  grad3.addColorStop(0.5, '#B22222');
+  grad3.addColorStop(1,   '#8e1818');
+  tc3.fillStyle = grad3;
+  tc3.fillRect(0, 0, 512, 218);
+  tc3.strokeStyle = 'rgba(255,220,200,0.06)';
+  tc3.lineWidth = 1;
+  for (let yi = 0; yi < 218; yi += 6) {
+    tc3.beginPath(); tc3.moveTo(0, yi); tc3.lineTo(512, yi); tc3.stroke();
+  }
+  tc3.save();
+  tc3.translate(512, 0);
+  tc3.scale(-1, 1);
+  tc3.font = '700 88px "Playfair Display", Georgia, serif';
+  tc3.textAlign = 'center';
+  tc3.textBaseline = 'middle';
+  tc3.fillStyle = 'rgba(249,247,242,0.92)';
+  tc3.fillText('ABOUT', 256, 105);
+  tc3.strokeStyle = 'rgba(249,247,242,0.30)';
+  tc3.lineWidth = 1.5;
+  tc3.beginPath(); tc3.moveTo(60, 150); tc3.lineTo(452, 150); tc3.stroke();
+  tc3.restore();
+
+  flagMat3 = new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0.0 }, uAmplitude: { value: 0.16 }, uFrequency: { value: 2.8 }, uTexture: { value: new THREE.CanvasTexture(texC3) } },
+    vertexShader: expFlagVert, fragmentShader: expFlagFrag,
+    transparent: true, side: THREE.DoubleSide,
+  });
+
+  const aboutFlagMesh = new THREE.Mesh(new THREE.PlaneGeometry(FLAG_W, FLAG_H, 40, 20), flagMat3);
+  aboutFlagMesh.rotation.y = 5*Math.PI / 4;
+  aboutFlagMesh.position.set(-0.5 + 1, POLE_H - FLAG_H * 0.55, -FLAG_W / 2 + 0.3);
+  aboutFlagGroup.add(aboutFlagMesh);
+
+  // --- ART FLAG — 30% along the trail ---
+  const artPoint = surfacePoints[Math.floor(0.30 * (TRAIL_N - 1))];
+
+  const artPole = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.03, 0.05, POLE_H, 8),
+    new THREE.MeshBasicMaterial({ color: 0x1a0f06 })
+  );
+  artPole.position.y = POLE_H / 2;
+  const artFlagGroup = new THREE.Group();
+  artFlagGroup.position.set(artPoint.x + 0.3, artPoint.y, artPoint.z + 0.9);
+  artFlagGroup.add(artPole);
+  scene.add(artFlagGroup);
+
+  const texC4 = document.createElement('canvas');
+  texC4.width = 512; texC4.height = 218;
+  const tc4 = texC4.getContext('2d');
+  const grad4 = tc4.createLinearGradient(0, 0, 512, 218);
+  grad4.addColorStop(0,   '#9e1c1c');
+  grad4.addColorStop(0.5, '#B22222');
+  grad4.addColorStop(1,   '#8e1818');
+  tc4.fillStyle = grad4;
+  tc4.fillRect(0, 0, 512, 218);
+  tc4.strokeStyle = 'rgba(255,220,200,0.06)';
+  tc4.lineWidth = 1;
+  for (let yi = 0; yi < 218; yi += 6) {
+    tc4.beginPath(); tc4.moveTo(0, yi); tc4.lineTo(512, yi); tc4.stroke();
+  }
+  tc4.save();
+  tc4.translate(512, 0);
+  tc4.scale(-1, 1);
+  tc4.font = '700 88px "Playfair Display", Georgia, serif';
+  tc4.textAlign = 'center';
+  tc4.textBaseline = 'middle';
+  tc4.fillStyle = 'rgba(249,247,242,0.92)';
+  tc4.fillText('ART', 256, 105);
+  tc4.strokeStyle = 'rgba(249,247,242,0.30)';
+  tc4.lineWidth = 1.5;
+  tc4.beginPath(); tc4.moveTo(60, 150); tc4.lineTo(452, 150); tc4.stroke();
+  tc4.restore();
+
+  flagMat4 = new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0.0 }, uAmplitude: { value: 0.16 }, uFrequency: { value: 2.8 }, uTexture: { value: new THREE.CanvasTexture(texC4) } },
+    vertexShader: expFlagVert, fragmentShader: expFlagFrag,
+    transparent: true, side: THREE.DoubleSide,
+  });
+
+  const artFlagMesh = new THREE.Mesh(new THREE.PlaneGeometry(FLAG_W, FLAG_H, 40, 20), flagMat4);
+  artFlagMesh.rotation.y = 3 * Math.PI / 4;
+  artFlagMesh.position.set(0.4, POLE_H - FLAG_H * 0.55, -FLAG_W / 2 + 1.2);
+  artFlagGroup.add(artFlagMesh);
+
+
+  // --- PROJECTS FLAG — 50% along the trail ---
+  const projPoint = surfacePoints[Math.floor(0.50 * (TRAIL_N - 1))];
+
+  const projPole = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.03, 0.05, POLE_H, 8),
+    new THREE.MeshBasicMaterial({ color: 0x1a0f06 })
+  );
+  projPole.position.y = POLE_H / 2;
+  const projFlagGroup = new THREE.Group();
+  projFlagGroup.position.set(projPoint.x - 0.7, projPoint.y - 1.3, projPoint.z + 1.4);
+  projFlagGroup.add(projPole);
+  scene.add(projFlagGroup);
+
+  const texC5 = document.createElement('canvas');
+  texC5.width = 512; texC5.height = 218;
+  const tc5 = texC5.getContext('2d');
+  const grad5 = tc5.createLinearGradient(0, 0, 512, 218);
+  grad5.addColorStop(0,   '#9e1c1c');
+  grad5.addColorStop(0.5, '#B22222');
+  grad5.addColorStop(1,   '#8e1818');
+  tc5.fillStyle = grad5;
+  tc5.fillRect(0, 0, 512, 218);
+  tc5.strokeStyle = 'rgba(255,220,200,0.06)';
+  tc5.lineWidth = 1;
+  for (let yi = 0; yi < 218; yi += 6) {
+    tc5.beginPath(); tc5.moveTo(0, yi); tc5.lineTo(512, yi); tc5.stroke();
+  }
+  tc5.save();
+  tc5.translate(512, 0);
+  tc5.scale(-1, 1);
+  tc5.font = '700 72px "Playfair Display", Georgia, serif';
+  tc5.textAlign = 'center';
+  tc5.textBaseline = 'middle';
+  tc5.fillStyle = 'rgba(249,247,242,0.92)';
+  tc5.fillText('PROJECTS', 256, 105);
+  tc5.strokeStyle = 'rgba(249,247,242,0.30)';
+  tc5.lineWidth = 1.5;
+  tc5.beginPath(); tc5.moveTo(40, 150); tc5.lineTo(472, 150); tc5.stroke();
+  tc5.restore();
+
+  flagMat5 = new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0.0 }, uAmplitude: { value: 0.16 }, uFrequency: { value: 2.8 }, uTexture: { value: new THREE.CanvasTexture(texC5) } },
+    vertexShader: expFlagVert, fragmentShader: expFlagFrag,
+    transparent: true, side: THREE.DoubleSide,
+  });
+
+  // Axis arrows at projects flag pole — origin at pole tip (X = red, Z = blue)
+  const ARROW_LEN = 1.2, ARROW_HEAD = 0.25, ARROW_SHAFT = 0.04;
+  const axisOrigin = new THREE.Vector3(0, POLE_H, 0);
+  const xArrow = new THREE.ArrowHelper(
+    new THREE.Vector3(1, 0, 0), axisOrigin, ARROW_LEN, 0xff2222, ARROW_HEAD, ARROW_SHAFT
+  );
+  const zArrow = new THREE.ArrowHelper(
+    new THREE.Vector3(0, 0, 1), axisOrigin, ARROW_LEN, 0x2244ff, ARROW_HEAD, ARROW_SHAFT
+  );
+  projFlagGroup.add(xArrow, zArrow);
+
+  const projFlagMesh = new THREE.Mesh(new THREE.PlaneGeometry(FLAG_W, FLAG_H, 40, 20), flagMat5);
+  projFlagMesh.rotation.y = Math.PI / 2;
+  projFlagMesh.position.set(0, POLE_H - FLAG_H * 0.55, -FLAG_W / 2 + 1.4);
+  projFlagGroup.add(projFlagMesh);
+
 });
 
 const camPath = new THREE.CatmullRomCurve3([
@@ -452,16 +857,17 @@ function remapScroll(raw) {
   return 0.99;
 }
 
-const ANCHORS = ['cp1', 'cp-github', 'cp-art', 'cp2', 'cp3', 'cp4', 'cp2b', 'cp3b'];
+const ANCHORS = ['cp1', 'cp-github', 'cp-art', 'cp2', 'cp3', 'cp2b', 'cp3b', 'cp-connect-left', 'cp-connect'];
 const ANCHOR_ZONES = {
-  'cp1':       [-0.1, 0.20],
-  'cp-github': [-0.1, 0.20],
-  'cp-art': [0.20, 0.40],
-  'cp3':    [0.40, 0.60],
-  'cp3b':   [0.40, 0.60],
-  'cp2':    [0.60, 0.80],
-  'cp2b':   [0.60, 0.80],
-  'cp4':    [0.80, 1.1],
+  'cp1':             [-0.1, 0.20],
+  'cp-github':       [-0.1, 0.20],
+  'cp-art':          [0.20, 0.40],
+  'cp3':             [0.40, 0.60],
+  'cp3b':            [0.40, 0.60],
+  'cp2':             [0.60, 0.80],
+  'cp2b':            [0.60, 0.80],
+  'cp-connect-left': [0.80, 1.1],
+  'cp-connect':      [0.80, 1.1],
 };
 function updateAnchors() {
   const raw = scrollProgress;
@@ -479,7 +885,7 @@ function updateAnchors() {
       opacity = Math.min(fadeIn, fadeOut);
     }
     el.style.opacity = opacity.toFixed(3);
-    el.querySelectorAll('.cp-item, .art-frame, .art-col').forEach(item => {
+    el.querySelectorAll('.cp-item, .art-frame, .art-col, .connect-card, .connect-hero').forEach(item => {
       item.style.pointerEvents = opacity > 0 ? 'auto' : 'none';
     });
   });
@@ -495,7 +901,18 @@ function animate() {
   camera.position.lerp(camPath.getPoint(p), 0.06);
   camera.lookAt(0, p * 10, 0);
 
+  // zoom out as the camera reaches the mountain peak (scrollProgress → 1.0)
+  const zoomT = THREE.MathUtils.smoothstep(scrollProgress, 0.80, 1.00);
+  const targetFov = THREE.MathUtils.lerp(42, 55, zoomT);
+  camera.fov += (targetFov - camera.fov) * 0.05;
+  camera.updateProjectionMatrix();
+
   if (trail) trail.geometry.setDrawRange(0, Math.floor(scrollProgress * trail.geometry.index.count));
+  if (flagMat) flagMat.uniforms.uTime.value = clock;
+  if (flagMat2) flagMat2.uniforms.uTime.value = clock;
+  if (flagMat3) flagMat3.uniforms.uTime.value = clock;
+  if (flagMat4) flagMat4.uniforms.uTime.value = clock;
+  if (flagMat5) flagMat5.uniforms.uTime.value = clock;
 
 
   updateAnchors();

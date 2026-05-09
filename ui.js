@@ -104,6 +104,81 @@ window.addEventListener('scroll', () => {
   } catch (_) {}
 })();
 
+// ── CONNECT FORM ──
+(function () {
+  const form = document.getElementById('connect-form');
+  const btn  = form && form.querySelector('.connect-submit');
+  if (!form) return;
+
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  function setError(field, msg) {
+    field.classList.add('invalid');
+    let err = field.parentElement.querySelector('.connect-error');
+    if (!err) {
+      err = document.createElement('span');
+      err.className = 'connect-error';
+      field.parentElement.appendChild(err);
+    }
+    err.textContent = msg;
+  }
+
+  function clearError(field) {
+    field.classList.remove('invalid');
+    const err = field.parentElement.querySelector('.connect-error');
+    if (err) err.remove();
+  }
+
+  // clear errors on input
+  form.querySelectorAll('input, textarea').forEach(el => {
+    el.addEventListener('input', () => clearError(el));
+  });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (btn.classList.contains('sent')) return;
+
+    const emailEl = document.getElementById('cf-email');
+    const msgEl   = document.getElementById('cf-msg');
+    let valid = true;
+
+    if (!EMAIL_RE.test(emailEl.value.trim())) {
+      setError(emailEl, 'Enter a valid email address.');
+      valid = false;
+    }
+    if (msgEl.value.trim().length < 10) {
+      setError(msgEl, 'Message must be at least 10 characters.');
+      valid = false;
+    }
+    if (!valid) return;
+
+    // wire up your own endpoint / Formspree here if needed
+    // const data = new FormData(form);
+    // await fetch('https://formspree.io/f/YOUR_ID', { method: 'POST', body: data, headers: { Accept: 'application/json' } });
+
+    btn.classList.add('sent');
+    btn.disabled = true;
+    setTimeout(() => {
+      form.reset();
+      btn.classList.remove('sent');
+      btn.disabled = false;
+    }, 3200);
+  });
+})();
+
+// ── CLIPBOARD ──
+(function () {
+  const copyBtn = document.getElementById('email-copy-btn');
+  if (!copyBtn) return;
+
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText('lievayifan@gmail.com').then(() => {
+      copyBtn.classList.add('copied');
+      setTimeout(() => copyBtn.classList.remove('copied'), 1800);
+    });
+  });
+})();
+
 // ── AUDIO ──
 (function () {
   const audio     = document.getElementById('bg-music');

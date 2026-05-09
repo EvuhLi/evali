@@ -100,7 +100,7 @@ canvas { display: block; position: fixed; top: 0; left: 0; width: 100vw !importa
 .gh-stat-val {
   font-family: 'Inter', 'Helvetica Neue', sans-serif;
   font-size: 32px;
-  font-weight: 600;
+  font-weight: 300;
   color: rgba(45,45,45,0.88);
   line-height: 1;
   letter-spacing: -0.03em;
@@ -150,7 +150,7 @@ canvas { display: block; position: fixed; top: 0; left: 0; width: 100vw !importa
 #cp1 h2 {
   font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
   font-size: 46px;
-  font-weight: 300;
+  font-weight: 600;
   letter-spacing: -0.01em;
   color: rgba(45,45,45,0.90);
   line-height: 1.0;
@@ -234,53 +234,6 @@ canvas { display: block; position: fixed; top: 0; left: 0; width: 100vw !importa
   pointer-events: none;
 }
 
-/* ── EDUCATION SECTION (#cp4) ── */
-#cp4 {
-  max-width: 300px;
-  padding: 24px 22px;
-  background: rgba(255,255,255,0.38);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.58);
-  border-radius: 5px;
-  box-shadow:
-    0 2px 10px rgba(45,45,45,0.05),
-    0 8px 32px -8px rgba(45,45,45,0.10),
-    inset 0 1px 0 rgba(255,255,255,0.85);
-}
-#cp4 h2 {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  color: rgba(45,45,45,0.88);
-  line-height: 1.3;
-  margin-bottom: 4px;
-}
-#cp4 .cp-subtitle {
-  font-family: 'Inter', sans-serif;
-  font-size: 9px;
-  font-weight: 400;
-  letter-spacing: 0.20em;
-  text-transform: uppercase;
-  color: rgba(45,45,45,0.36);
-  margin-bottom: 14px;
-  display: block;
-}
-#cp4 p {
-  font-family: 'Inter', sans-serif;
-  font-size: 12px;
-  line-height: 1.70;
-  color: rgba(45,45,45,0.62);
-  font-weight: 400;
-  margin-top: 8px;
-}
-#cp4 .cp-divider {
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(to right, rgba(45,45,45,0.12), transparent);
-  margin: 12px 0;
-}
 
 /* ── SIDE CARD CONTAINERS ── */
 .cp-text {
@@ -589,14 +542,23 @@ canvas { display: block; position: fixed; top: 0; left: 0; width: 100vw !importa
   padding: 10px 14px 12px 16px;
 }
 .cp-project .cp-place {
-  display: block;
-  font-family: 'Inter', 'Helvetica Neue', sans-serif;
-  font-size: 9px;
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  color: rgba(45,45,45,0.38);
-  margin-top: 6px;
-  line-height: 1.7;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+.cp-lang-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: rgba(45,45,45,0.78);
+  background: rgba(139,0,0,0.07);
+  border: 1px solid rgba(139,0,0,0.18);
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+  line-height: 1.4;
 }
 .cp-desc {
   font-family: 'Inter', 'Helvetica Neue', sans-serif;
@@ -806,6 +768,278 @@ canvas { display: block; position: fixed; top: 0; left: 0; width: 100vw !importa
 }
 #mute-btn:hover { opacity: 1; background: rgba(249,247,242,0.95); }
 #mute-btn svg { width: 16px; height: 16px; fill: rgba(26,20,16,0.9); }
+
+/* ── CONNECT SECTION ── */
+#cp-connect-left {
+  left: 5%;
+  max-width: 300px;
+}
+
+#cp-connect {
+  left: auto;
+  right: 5%;
+  max-width: 320px;
+}
+
+.connect-hero {
+  display: flex;
+  flex-direction: column;
+}
+
+.connect-eyebrow {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(139,0,0,0.65);
+  margin-bottom: 16px;
+}
+
+.connect-hero-title {
+  font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: rgba(45,45,45,0.90);
+}
+
+.connect-hero-title em {
+  font-style: italic;
+  font-weight: 300;
+  color: rgba(139,0,0,0.75);
+}
+
+.connect-hero .connect-links {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.connect-card {
+  background: rgba(255,255,255,0.38);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255,255,255,0.60);
+  border-radius: 6px;
+  box-shadow:
+    0 2px 12px rgba(45,45,45,0.05),
+    0 10px 40px -10px rgba(45,45,45,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.9);
+  padding: 28px 28px 24px;
+}
+
+.connect-header { margin-bottom: 22px; }
+
+.connect-title {
+  font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: rgba(45,45,45,0.90);
+  line-height: 1.1;
+  margin-bottom: 14px;
+}
+
+.connect-rule {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, rgba(45,45,45,0.18), rgba(45,45,45,0.04), transparent);
+}
+
+/* form fields */
+.connect-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 18px;
+}
+
+.connect-field label {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(45,45,45,0.42);
+}
+
+.connect-field input,
+.connect-field textarea {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(45,45,45,0.18);
+  border-radius: 0;
+  outline: none;
+  font-family: 'Inter', 'Helvetica Neue', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(45,45,45,0.88);
+  padding: 6px 0;
+  width: 100%;
+  resize: none;
+  transition: border-color 0.25s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.connect-field input:focus,
+.connect-field textarea:focus {
+  border-bottom-color: rgba(139,0,0,0.55);
+}
+
+.connect-field textarea { line-height: 1.65; }
+
+.connect-field input.invalid,
+.connect-field textarea.invalid {
+  border-bottom-color: rgba(139,0,0,0.70);
+}
+
+.connect-error {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: rgba(139,0,0,0.80);
+  margin-top: 4px;
+}
+
+/* submit button */
+.connect-submit {
+  position: relative;
+  margin-top: 22px;
+  width: 100%;
+  padding: 11px 24px;
+  background: rgba(45,45,45,0.88);
+  color: rgba(249,247,242,0.92);
+  border: none;
+  border-radius: 999px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    background 0.35s ease,
+    box-shadow 0.35s ease,
+    transform 0.25s cubic-bezier(0.23,1,0.32,1);
+}
+
+.connect-submit:hover {
+  background: rgba(139,0,0,0.88);
+  box-shadow: 0 6px 24px -6px rgba(139,0,0,0.38);
+  transform: translateY(-1px);
+}
+
+.connect-submit-label,
+.connect-submit-ok {
+  display: block;
+  transition: transform 0.4s cubic-bezier(0.23,1,0.32,1), opacity 0.4s ease;
+}
+
+.connect-submit-ok {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(120%);
+  opacity: 0;
+}
+
+.connect-submit.sent .connect-submit-label {
+  transform: translateY(-120%);
+  opacity: 0;
+}
+
+.connect-submit.sent .connect-submit-ok {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* link row */
+.connect-links {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(45,45,45,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.connect-link {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: rgba(45,45,45,0.60);
+  text-decoration: none;
+  transition: color 0.22s ease;
+}
+
+.connect-link:hover { color: rgba(139,0,0,0.85); }
+
+.connect-link-icon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  opacity: 0.65;
+}
+
+/* email row with copy button */
+.connect-email-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.connect-copy {
+  position: relative;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: rgba(45,45,45,0.40);
+  transition: color 0.22s ease;
+  display: flex;
+  align-items: center;
+}
+
+.connect-copy:hover { color: rgba(139,0,0,0.75); }
+
+.copy-icon {
+  width: 12px;
+  height: 12px;
+  display: block;
+}
+
+.copy-tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: rgba(26,20,16,0.88);
+  color: rgba(249,247,242,0.92);
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  padding: 4px 9px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.connect-copy.copied .copy-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
 
 /* ── TWEAKS PANEL ── */
 #tweaks-panel {
