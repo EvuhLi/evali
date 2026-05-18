@@ -71,7 +71,7 @@ function initInkCursor() {
   });
 
   document.addEventListener('pointerover', (e) => {
-    const el = e.target.closest('a, button, [role="button"], .cp-item, .art-frame, .cp-marker, #modal-close');
+    const el = e.target.closest('a, button, [role="button"], .cp-item, .art-frame, .cp-marker, #modal-close, .exp-project');
     isHovering = !!el;
   });
 
@@ -858,6 +858,31 @@ const ANCHOR_ZONES = {
   'cp-connect-left': [0.80, 1.1],
   'cp-connect':      [0.80, 1.1],
 };
+const EXP_START  = 0.42, EXP_END  = 0.60;
+const EXP2_START = 0.62, EXP2_END = 0.80;
+
+const expOverlay  = document.getElementById('exp-overlay');
+const expInner    = document.getElementById('exp-inner');
+const exp2Overlay = document.getElementById('exp2-overlay');
+const exp2Inner   = document.getElementById('exp2-inner');
+
+function driveOverlay(overlay, inner, start, end, raw) {
+  if (!overlay || !inner) return;
+  const inside = raw >= start && raw < end;
+  if (inside) {
+    const t = (raw - start) / (end - start);
+    const maxScroll = inner.scrollHeight - overlay.clientHeight;
+    overlay.scrollTop = Math.max(0, t * maxScroll);
+  }
+  overlay.style.opacity = inside ? '1' : '0';
+  overlay.classList.toggle('visible', inside);
+}
+
+function updateExpOverlay(raw) {
+  driveOverlay(expOverlay,  expInner,  EXP_START,  EXP_END,  raw);
+  driveOverlay(exp2Overlay, exp2Inner, EXP2_START, EXP2_END, raw);
+}
+
 function updateAnchors() {
   const raw = scrollProgress;
   const fade = 0.03;
@@ -878,6 +903,7 @@ function updateAnchors() {
       item.style.pointerEvents = opacity > 0 ? 'auto' : 'none';
     });
   });
+  updateExpOverlay(raw);
 }
 
 // scrollProgress is written by ui.js and read here each frame

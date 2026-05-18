@@ -34,10 +34,99 @@ function openModal(item) {
   modalInner.innerHTML = html;
   modalOverlay.classList.add('open');
 }
-function closeModal() { modalOverlay.classList.remove('open', 'art-mode'); }
+function closeModal() { modalOverlay.classList.remove('open', 'art-mode', 'project-mode'); }
 
 document.querySelectorAll('.cp-item').forEach(item => {
   item.addEventListener('click', (e) => { e.stopPropagation(); openModal(item); });
+});
+
+// ── PROJECT CARD MODALS ──
+const PROJECT_DATA = {
+  loom: {
+    title: 'Loom',
+    img: 'project pics/loom.png',
+    tags: ['React 19', 'Vite', 'React Router', 'D3.js', 'Node.js', 'Express 5', 'MongoDB', 'Mongoose', 'Render', 'reCAPTCHA v2'],
+    desc: 'Loom is a response to the rise of AI art theft. I wanted to build a space where artists could share work without fear of bot scraping.',
+    bullets: [
+      'Built a production-ready full-stack social platform that prevents AI web-scraping of art — React/Vite, Node/Express REST API, MongoDB schemas for users, posts, and communities.',
+      'Developed a Python AI/ML microservice using the OpenAI API for bot detection, content tagging, and personalized recommendations.',
+      'Selected for the Gubernatorial Roundtable at the Governor\'s Residence with First Lady Lori Shapiro and PA state officials.',
+    ],
+    links: [
+      { label: 'GitHub', href: 'https://github.com/EvuhLi/Loom' },
+      { label: 'Live Demo', href: 'https://loom-art-app.vercel.app/' },
+    ],
+  },
+  minecraft: {
+    title: 'Minecraft Live',
+    img: 'project pics/minecraftlive.png',
+    tags: ['Python', 'OpenCV', 'MediaPipe', 'WebSockets', 'asyncio', 'pynput', 'pyautogui', 'Vanilla JS', 'SSL/WSS'],
+    desc: 'I wanted to see if I could play Minecraft without a keyboard. I built a system that uses computer vision to translate body gestures into game inputs in real-time.',
+    bullets: [
+      'Built a gesture-controlled interface: OpenCV captures webcam video, MediaPipe runs real-time pose and hand landmark detection, and pynput/pyautogui translate body movements into keyboard and mouse input.',
+      'Architected an async Python server (asyncio + http.server) streaming tracking data over secure WebSockets (WSS/SSL) to a Vanilla JS frontend client.',
+      'Self-signed SSL certificate enables HTTPS/WSS locally so the browser can access the webcam — no external dependencies required.',
+    ],
+    links: [
+      { label: 'GitHub', href: 'https://github.com/EvuhLi/MinecraftLive' },
+    ],
+  },
+  azul: {
+    title: 'Azul Tile',
+    img: 'project pics/azul.png',
+    tags: ['Java'],
+    desc: 'A fully playable digital version of the Azul board game, built from scratch in Java.',
+    bullets: [
+      'Built the complete game engine from scratch in Java, covering tile drafting, factory displays, pattern lines, and scoring logic.',
+      'Integrated Lottie animations for a polished visual experience.',
+    ],
+    links: [
+      { label: 'GitHub', href: 'https://github.com/EvuhLi/AzulTile' },
+    ],
+  },
+  sparrow: {
+    title: 'Sparrow',
+    img: 'project pics/sparrow.png',
+    tags: ['React', 'MongoDB', 'HTML/CSS', 'Node.js', 'Adobe Illustrator'],
+    desc: 'A full-stack educational app teaching children Java through visual block coding and interactive lessons.',
+    bullets: [
+      'Full-stack educational app teaching children Java through visual block coding and interactive lessons.',
+      'Character animations, customization systems, and site layout designed in Adobe Illustrator and After Effects.',
+      'Piloted with elementary and middle-school students; iterated on accessibility features from user feedback.',
+    ],
+    links: [
+      { label: 'GitHub', href: 'https://github.com/EvuhLi/Sparrow' },
+    ],
+  },
+};
+
+function openProjectModal(key) {
+  const p = PROJECT_DATA[key];
+  if (!p) return;
+  const tagsHtml = p.tags.map(t => `<span class="pm-tag">${t}</span>`).join('');
+  const bulletsHtml = p.bullets.map(b => `<li>${b}</li>`).join('');
+  const linksHtml = p.links.map(l =>
+    `<a href="${l.href}" target="_blank" rel="noopener" class="pm-link">${l.label} →</a>`
+  ).join('');
+  modalInner.innerHTML = `
+    <div class="pm-img"><img src="${p.img}" alt="${p.title}"></div>
+    <div class="pm-body">
+      <h2 class="pm-title">${p.title}</h2>
+      <div class="pm-tags">${tagsHtml}</div>
+      <p class="pm-desc">${p.desc}</p>
+      <ul class="pm-bullets">${bulletsHtml}</ul>
+      <div class="pm-links">${linksHtml}</div>
+    </div>
+  `;
+  modalOverlay.classList.add('open', 'project-mode');
+}
+
+document.querySelectorAll('.exp-card.exp-project').forEach(card => {
+  card.addEventListener('click', (e) => {
+    if (e.target.closest('a')) return;
+    e.stopPropagation();
+    openProjectModal(card.dataset.project);
+  });
 });
 document.querySelectorAll('.art-frame').forEach(frame => {
   frame.addEventListener('click', e => {
@@ -205,13 +294,14 @@ window.addEventListener('scroll', () => {
 
 // ── CLIPBOARD ──
 (function () {
-  const copyBtn = document.getElementById('email-copy-btn');
-  if (!copyBtn) return;
-
-  copyBtn.addEventListener('click', () => {
-    navigator.clipboard.writeText('lievayifan@gmail.com').then(() => {
-      copyBtn.classList.add('copied');
-      setTimeout(() => copyBtn.classList.remove('copied'), 1800);
+  ['email-copy-btn', 'about-email-copy-btn'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText('lievayifan@gmail.com').then(() => {
+        btn.classList.add('copied');
+        setTimeout(() => btn.classList.remove('copied'), 1800);
+      });
     });
   });
 })();
