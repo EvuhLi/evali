@@ -576,11 +576,11 @@ canvas { display: block; position: fixed; top: 0; left: 0; width: 100vw !importa
 
 /* art lightbox */
 #modal-overlay.art-mode #modal-card {
-  padding: 10px;
+  padding: 0;
   width: auto;
   max-width: 90vw;
-  background: rgba(8, 6, 4, 0.96);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: transparent;
+  border: none;
   border-radius: 4px;
   box-shadow: 0 40px 100px -20px rgba(0,0,0,0.8);
   backdrop-filter: blur(12px);
