@@ -45,12 +45,12 @@ const PROJECT_DATA = {
   loom: {
     title: 'Loom',
     img: 'project pics/loom.png',
-    tags: ['React 19', 'Vite', 'React Router', 'D3.js', 'Node.js', 'Express 5', 'MongoDB', 'Mongoose', 'Render', 'reCAPTCHA v2'],
-    desc: 'Loom is a response to the rise of AI art theft. I wanted to build a space where artists could share work without fear of bot scraping.',
+    tags: ['React', 'Node.js/Express', 'Python', 'FastAPI', 'MongoDB', 'PyTorch/CLIP', 'D3.js'],
+    desc: 'Hacking4Humanity Finalist — a social platform that deters art scraping with 10+ layers of protection: rate limiting, bot detection, and screenshot deterrence.',
     bullets: [
-      'Built a production-ready full-stack social platform that prevents AI web-scraping of art — React/Vite, Node/Express REST API, MongoDB schemas for users, posts, and communities.',
-      'Developed a Python AI/ML microservice using the OpenAI API for bot detection, content tagging, and personalized recommendations.',
-      'Selected for the Gubernatorial Roundtable at the Governor\'s Residence with First Lady Lori Shapiro and PA state officials.',
+      'Built a social platform deterring art scraping with 10+ protection layers (rate limiting, bot detection, screenshot deterrence).',
+      'Cut feed load 50x (5s to 100ms) via metadata/image separation, two-tier HTTP caching, and MongoDB indexing.',
+      'Invited to discuss AI-driven safety with PA First Lady Lori Shapiro at the Governor\'s Residence.',
     ],
     links: [
       { label: 'GitHub', href: 'https://github.com/EvuhLi/Loom' },
@@ -60,42 +60,15 @@ const PROJECT_DATA = {
   minecraft: {
     title: 'Minecraft Live',
     img: 'project pics/minecraftlive.png',
-    tags: ['Python', 'OpenCV', 'MediaPipe', 'WebSockets', 'asyncio', 'pynput', 'pyautogui', 'Vanilla JS', 'SSL/WSS'],
-    desc: 'I wanted to see if I could play Minecraft without a keyboard. I built a system that uses computer vision to translate body gestures into game inputs in real-time.',
+    tags: ['Python', 'MediaPipe', 'OpenCV', 'WebSockets', 'pynput'],
+    desc: 'Real-time motion controller translating 10+ body poses into Minecraft inputs at 15ms/frame (66 FPS).',
     bullets: [
-      'Built a gesture-controlled interface: OpenCV captures webcam video, MediaPipe runs real-time pose and hand landmark detection, and pynput/pyautogui translate body movements into keyboard and mouse input.',
-      'Architected an async Python server (asyncio + http.server) streaming tracking data over secure WebSockets (WSS/SSL) to a Vanilla JS frontend client.',
-      'Self-signed SSL certificate enables HTTPS/WSS locally so the browser can access the webcam — no external dependencies required.',
+      'Built a real-time motion controller translating 10+ body poses into Minecraft inputs at 15ms/frame (66 FPS).',
+      'Engineered a cross-platform mobile controller over WebSockets/UDP with drift calibration and dead-zone filtering.',
+      'Designed a configurable, debounced gesture state machine converting noisy pose data into stable game controls.',
     ],
     links: [
       { label: 'GitHub', href: 'https://github.com/EvuhLi/MinecraftLive' },
-    ],
-  },
-  azul: {
-    title: 'Azul Tile',
-    img: 'project pics/azul.png',
-    tags: ['Java'],
-    desc: 'A fully playable digital version of the Azul board game, built from scratch in Java.',
-    bullets: [
-      'Built the complete game engine from scratch in Java, covering tile drafting, factory displays, pattern lines, and scoring logic.',
-      'Integrated Lottie animations for a polished visual experience.',
-    ],
-    links: [
-      { label: 'GitHub', href: 'https://github.com/EvuhLi/AzulTile' },
-    ],
-  },
-  sparrow: {
-    title: 'Sparrow',
-    img: 'project pics/sparrow.png',
-    tags: ['React', 'MongoDB', 'HTML/CSS', 'Node.js', 'Adobe Illustrator'],
-    desc: 'A full-stack educational app teaching children Java through visual block coding and interactive lessons.',
-    bullets: [
-      'Full-stack educational app teaching children Java through visual block coding and interactive lessons.',
-      'Character animations, customization systems, and site layout designed in Adobe Illustrator and After Effects.',
-      'Piloted with elementary and middle-school students; iterated on accessibility features from user feedback.',
-    ],
-    links: [
-      { label: 'GitHub', href: 'https://github.com/EvuhLi/Sparrow' },
     ],
   },
 };
