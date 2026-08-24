@@ -846,15 +846,11 @@ function remapScroll(raw) {
   return 0.99;
 }
 
-const ANCHORS = ['cp1', 'cp-github', 'cp-art', 'cp2', 'cp3', 'cp2b', 'cp3b', 'cp-connect-left', 'cp-connect'];
+const ANCHORS = ['cp1', 'cp-github', 'cp-art', 'cp-connect-left', 'cp-connect'];
 const ANCHOR_ZONES = {
   'cp1':             [-0.1, 0.20],
   'cp-github':       [-0.1, 0.20],
   'cp-art':          [0.20, 0.40],
-  'cp3':             [0.40, 0.60],
-  'cp3b':            [0.40, 0.60],
-  'cp2':             [0.60, 0.80],
-  'cp2b':            [0.60, 0.80],
   'cp-connect-left': [0.80, 1.1],
   'cp-connect':      [0.80, 1.1],
 };

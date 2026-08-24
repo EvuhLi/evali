@@ -217,8 +217,6 @@ canvas { display: block; position: fixed; top: 0; left: 0; width: 100vw !importa
 
 
 /* ── EXP OVERLAY ── */
-#cp2, #cp2b, #cp3, #cp3b { display: none; }
-
 #exp-overlay {
   position: fixed;
   top: 0;
@@ -435,17 +433,6 @@ canvas { display: block; position: fixed; top: 0; left: 0; width: 100vw !importa
   gap: 0;
   padding: 0 250px;
 }
-#cp2  { left: 1.5%; gap: 12px; }
-#cp2b { left: auto; right: 1.5%; gap: 12px; }
-#cp3 {
-  left: 1.5%;
-  gap: 14px;
-}
-#cp3b {
-  left: auto; right: 1.5%;
-  gap: 14px;
-}
-
 /* ── ART CAROUSEL ── */
 .art-col {
   width: 240px;
