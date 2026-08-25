@@ -43,31 +43,54 @@ function initInkCursor() {
   resizeCursorCanvas();
   window.addEventListener('resize', resizeCursorCanvas);
   const nodes = [];
-  let lastX = null, lastY = null, targetX = 0, targetY = 0, dropX = 0, dropY = 0, dropVisible = false;
+  let lastX = null, lastY = null, lastT = null, targetX = 0, targetY = 0, dropX = 0, dropY = 0, dropVisible = false;
+  let headingX = 1, headingY = 0, speedEma = 0;
   let isHovering = false, hoverT = 0;
   let isTyping = false, typingT = 0;
-  const TTL = 320, MAX_R = 4, MAX_DOT_GAP = 8, N_BLOB = 10;
+  const TTL = 340, MAX_R = 4.5, MAX_DOT_GAP = 8, N_BLOB = 10;
 
-  const addPoint = (x, y, t) => {
+  // deterministic pseudo-random per node index, so bristle jitter doesn't flicker frame to frame
+  const bristleJitter = (i) => {
+    const s = Math.sin(i * 12.9898) * 43758.5453;
+    return (s - Math.floor(s)) * 2 - 1;
+  };
+
+  const addPoint = (x, y, t, speedPxMs) => {
+    // pressure/speed model: a slow-moving brush lays down more ink (wide), a fast
+    // flick thins out and starts to fray — the same behavior real ink does.
+    const speedFactor = 1.35 - Math.min(speedPxMs / 1.8, 1) * 0.85;
     if (lastX !== null) {
       const dx = x - lastX, dy = y - lastY, dist = Math.hypot(dx, dy);
       if (dist > MAX_DOT_GAP) {
         const steps = Math.ceil(dist / MAX_DOT_GAP);
         for (let i = 1; i < steps; i++) {
           const f = i / steps;
-          nodes.push({ x: lastX + dx * f, y: lastY + dy * f, born: t });
+          nodes.push({ x: lastX + dx * f, y: lastY + dy * f, born: t, speedFactor, jitter: bristleJitter(nodes.length) });
         }
       }
     }
-    nodes.push({ x, y, born: t });
+    nodes.push({ x, y, born: t, speedFactor, jitter: bristleJitter(nodes.length) });
     if (nodes.length > 400) nodes.splice(0, nodes.length - 400);
     lastX = x; lastY = y;
   };
 
   window.addEventListener('pointermove', (e) => {
+    const now = performance.now();
     targetX = e.clientX; targetY = e.clientY;
-    if (!dropVisible) { dropX = targetX; dropY = targetY; dropVisible = true; }
-    addPoint(targetX, targetY, performance.now());
+    if (!dropVisible) { dropX = targetX; dropY = targetY; dropVisible = true; lastT = now; }
+    const dt = Math.max(now - (lastT ?? now), 1);
+    const dx = lastX === null ? 0 : targetX - lastX;
+    const dy = lastX === null ? 0 : targetY - lastY;
+    const dist = Math.hypot(dx, dy);
+    const speedPxMs = dist / dt;
+    if (dist > 0.5) {
+      const inv = 1 / dist;
+      headingX += (dx * inv - headingX) * 0.35;
+      headingY += (dy * inv - headingY) * 0.35;
+    }
+    speedEma += (speedPxMs - speedEma) * 0.3;
+    addPoint(targetX, targetY, now, speedPxMs);
+    lastT = now;
   });
 
   document.addEventListener('pointerover', (e) => {
@@ -86,19 +109,55 @@ function initInkCursor() {
 
     hoverT  += ((isHovering ? 1 : 0) - hoverT)  * 0.12;
     typingT += ((isTyping   ? 1 : 0) - typingT)  * 0.08;
+    speedEma += (0 - speedEma) * 0.15; // settle the nib back to round when idle
 
     while (nodes.length && now - nodes[0].born > TTL) nodes.shift();
 
+    // brush width at a node: age taper (ink drying/lifting) × speed taper (pressure) × bristle jitter
+    const nodeWidth = (n, age) => {
+      const ageTaper = Math.pow(Math.max(0, 1 - age), 0.6);
+      const w = MAX_R * 2 * ageTaper * n.speedFactor;
+      return Math.max(0, w + n.jitter * w * 0.22);
+    };
+
     const trailAlpha = (1 - hoverT * 0.85) * (1 - typingT * 0.95);
+    ctx.lineJoin = 'round';
     for (let i = 1; i < nodes.length; i++) {
-      const b = nodes[i], age = (now - b.born) / TTL, w = MAX_R * 2 * Math.pow(1 - age, 0.6);
-      if (w < 0.4) continue;
-      ctx.strokeStyle = `rgba(16,18,22,${(1 - age) * 0.9 * trailAlpha})`;
-      ctx.lineWidth = w;
+      const a = nodes[i - 1], b = nodes[i];
+      const ageA = (now - a.born) / TTL, ageB = (now - b.born) / TTL;
+      const wA = nodeWidth(a, ageA), wB = nodeWidth(b, ageB);
+      if (wA < 0.35 && wB < 0.35) continue;
+
+      const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+      const px = -dy / len, py = dx / len;
+      const segAlpha = 0.9 * trailAlpha;
+
+      // tapered ribbon quad instead of a fixed-width stroke — this is what makes it
+      // read as a brush pulling ink rather than a uniform pen line
       ctx.beginPath();
-      ctx.moveTo(nodes[i - 1].x, nodes[i - 1].y);
-      ctx.lineTo(b.x, b.y);
-      ctx.stroke();
+      ctx.moveTo(a.x + px * wA / 2, a.y + py * wA / 2);
+      ctx.lineTo(b.x + px * wB / 2, b.y + py * wB / 2);
+      ctx.lineTo(b.x - px * wB / 2, b.y - py * wB / 2);
+      ctx.lineTo(a.x - px * wA / 2, a.y - py * wA / 2);
+      ctx.closePath();
+      ctx.fillStyle = `rgba(16,18,22,${segAlpha})`;
+      ctx.fill();
+
+      // dry-brush fraying near the tail: a couple of thin split bristles peel off
+      // the sides once the stroke has thinned past ~55% of its width
+      if (wB < MAX_R * 0.9 && ageB > 0.35) {
+        const frayAlpha = segAlpha * 0.45;
+        ctx.strokeStyle = `rgba(16,18,22,${frayAlpha})`;
+        ctx.lineWidth = 0.6;
+        ctx.beginPath();
+        ctx.moveTo(a.x + px * wA * 0.7, a.y + py * wA * 0.7);
+        ctx.lineTo(b.x + px * wB * 1.4, b.y + py * wB * 1.4);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(a.x - px * wA * 0.7, a.y - py * wA * 0.7);
+        ctx.lineTo(b.x - px * wB * 1.4, b.y - py * wB * 1.4);
+        ctx.stroke();
+      }
     }
 
     if (dropVisible) {
@@ -106,15 +165,24 @@ function initInkCursor() {
 
       const blobAlpha = (1 - hoverT) * (1 - typingT);
       if (blobAlpha > 0.01) {
+        // squash the nib along the direction of travel — a brush pressed and
+        // dragged elongates; held still it settles back into a round dot
+        const stretch = Math.min(speedEma * 1.1, 1.6);
+        const angle = Math.atan2(headingY, headingX);
+        ctx.save();
+        ctx.translate(dropX, dropY);
+        ctx.rotate(angle);
+        ctx.scale(1 + stretch * 0.55, 1 - stretch * 0.22);
         ctx.beginPath();
         for (let i = 0; i < N_BLOB; i++) {
-          const a = (i / N_BLOB) * Math.PI * 2;
-          const r = MAX_R * (1 + (Math.sin(a * 2 + t * 2.2) * 0.13));
-          ctx.lineTo(dropX + Math.cos(a) * r, dropY + Math.sin(a) * r);
+          const a2 = (i / N_BLOB) * Math.PI * 2;
+          const r = MAX_R * (1 + (Math.sin(a2 * 2 + t * 2.2) * 0.13));
+          ctx.lineTo(Math.cos(a2) * r, Math.sin(a2) * r);
         }
         ctx.closePath();
         ctx.fillStyle = `rgba(14,16,20,${0.94 * blobAlpha})`;
         ctx.fill();
+        ctx.restore();
       }
 
       // open ring on hover (suppressed while typing)
@@ -292,7 +360,14 @@ let flagMat4 = null;
 let flagMat5 = null;
 const TRAIL_N = 120;
 const loader = new THREE.TextureLoader();
-loader.load(HM_FILE, (heightTex) => {
+loader.load(HM_FILE, async (heightTex) => {
+  // force-load the exact webfont/weight the flag canvases need — @font-face resources
+  // are fetched lazily on first use, so without this the canvases can bake in a
+  // fallback system font permanently (canvas text doesn't retro-update on font load)
+  await Promise.all([
+    document.fonts.load('600 1em "Cormorant Garamond"'),
+    document.fonts.ready,
+  ]).catch(() => {});
   const DISP = 20.0;
   const SEGS = 512;
 
@@ -507,7 +582,7 @@ loader.load(HM_FILE, (heightTex) => {
   texCtx.save();
   texCtx.translate(512, 0);
   texCtx.scale(-1, 1);
-  texCtx.font = '600 88px "Inter", "Helvetica Neue", sans-serif';
+  texCtx.font = '600 88px "Cormorant Garamond", Georgia, serif';
   texCtx.textAlign = 'center';
   texCtx.textBaseline = 'middle';
   texCtx.fillStyle = 'rgba(249,247,242,0.92)';
@@ -614,7 +689,7 @@ loader.load(HM_FILE, (heightTex) => {
   tc2.save();
   tc2.translate(512, 0);
   tc2.scale(-1, 1);
-  tc2.font = '600 62px "Inter", "Helvetica Neue", sans-serif';
+  tc2.font = '600 62px "Cormorant Garamond", Georgia, serif';
   tc2.textAlign = 'center';
   tc2.textBaseline = 'middle';
   tc2.fillStyle = 'rgba(249,247,242,0.92)';
@@ -696,7 +771,7 @@ loader.load(HM_FILE, (heightTex) => {
   tc3.save();
   tc3.translate(512, 0);
   tc3.scale(-1, 1);
-  tc3.font = '600 88px "Inter", "Helvetica Neue", sans-serif';
+  tc3.font = '600 88px "Cormorant Garamond", Georgia, serif';
   tc3.textAlign = 'center';
   tc3.textBaseline = 'middle';
   tc3.fillStyle = 'rgba(249,247,242,0.92)';
@@ -747,7 +822,7 @@ loader.load(HM_FILE, (heightTex) => {
   tc4.save();
   tc4.translate(512, 0);
   tc4.scale(-1, 1);
-  tc4.font = '600 88px "Inter", "Helvetica Neue", sans-serif';
+  tc4.font = '600 88px "Cormorant Garamond", Georgia, serif';
   tc4.textAlign = 'center';
   tc4.textBaseline = 'middle';
   tc4.fillStyle = 'rgba(249,247,242,0.92)';
@@ -799,7 +874,7 @@ loader.load(HM_FILE, (heightTex) => {
   tc5.save();
   tc5.translate(512, 0);
   tc5.scale(-1, 1);
-  tc5.font = '600 72px "Inter", "Helvetica Neue", sans-serif';
+  tc5.font = '600 72px "Cormorant Garamond", Georgia, serif';
   tc5.textAlign = 'center';
   tc5.textBaseline = 'middle';
   tc5.fillStyle = 'rgba(249,247,242,0.92)';
