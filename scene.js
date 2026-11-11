@@ -1,5 +1,5 @@
 history.scrollRestoration = 'manual';
-window.scrollTo(100, 100);
+window.scrollTo(0, 0);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xf7f3eb);
@@ -353,11 +353,254 @@ createBirdCluster(4, 0, 2); createBirdCluster(-5, -1, 4);
 // --- ASSET LOADER ---
 let trail = null;
 let surfaceCurve = null;
-let flagMat = null;
-let flagMat2 = null;
-let flagMat3 = null;
-let flagMat4 = null;
-let flagMat5 = null;
+
+// Flags rise slowly out of the mountain as the red trail draws toward them.
+// `at` is the flag's position along the trail (the trail is drawn up to scrollProgress).
+const popFlags = []; // { group, at, baseY, t }
+const FLAG_SINK = 2.0;      // how far below the surface a flag waits
+const FLAG_RISE_SPAN = 0.08; // scroll distance over which it rises, ending as the line arrives
+function registerPopFlag(group, at) {
+  popFlags.push({ group, at, baseY: group.position.y, t: 0 });
+  group.position.y -= FLAG_SINK;
+  group.visible = false;
+}
+function updatePopFlags(raw) {
+  popFlags.forEach(f => {
+    const target = THREE.MathUtils.smootherstep(raw, f.at - FLAG_RISE_SPAN, f.at);
+    f.t += (target - f.t) * 0.045; // slow, soft follow — no overshoot
+    const e = 1 - Math.pow(1 - f.t, 3); // ease-out: settles gently at the top
+    f.group.position.y = f.baseY - FLAG_SINK * (1 - e);
+    f.group.visible = f.t > 0.002;
+  });
+}
+// ── INK BANNER FLAGS ──
+// Cinnabar silk banners with a hand-inked border: rugged torn edge, a bold brush outline
+// that swells with pressure and breaks into dry-brush streaks, pigment pooling at the edge,
+// paper grain, and soft shading in the folds as they wave.
+const FLAG_W = 1.5, FLAG_H = 0.75, POLE_H = 1;
+const FLAG_SCALE = 1.45; // overall size of each flag (pole + banner)
+
+function _flagRng(seed) { // mulberry32 — deterministic per flag
+  return function () {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function makeFlagTexture(label, seed) {
+  const W = 1024, H = 512;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d');
+  const rnd = _flagRng(seed * 9301 + 49297);
+
+  // cinnabar ground
+  const g = ctx.createLinearGradient(0, 0, W, H);
+  g.addColorStop(0, '#a6271e');
+  g.addColorStop(0.45, '#b02a20');
+  g.addColorStop(1, '#8c1d16');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+
+  // uneven pigment: soft dark and light washes
+  for (let i = 0; i < 16; i++) {
+    const x = rnd() * W, y = rnd() * H, r = 90 + rnd() * 240;
+    const dark = rnd() < 0.55;
+    const a = 0.05 + rnd() * 0.08;
+    const rg = ctx.createRadialGradient(x, y, 0, x, y, r);
+    rg.addColorStop(0, dark ? `rgba(72,8,5,${a})` : `rgba(220,92,70,${a})`);
+    rg.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = rg;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // silk / paper fibres
+  ctx.lineCap = 'round';
+  for (let i = 0; i < 1100; i++) {
+    const x = rnd() * W, y = rnd() * H, len = 6 + rnd() * 26, ang = rnd() * Math.PI;
+    ctx.strokeStyle = rnd() < 0.6 ? 'rgba(255,228,210,0.05)' : 'rgba(60,4,2,0.06)';
+    ctx.lineWidth = 0.6 + rnd() * 0.8;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.quadraticCurveTo(x + Math.cos(ang + 0.4) * len * 0.5, y + Math.sin(ang + 0.4) * len * 0.5,
+                         x + Math.cos(ang) * len, y + Math.sin(ang) * len);
+    ctx.stroke();
+  }
+
+  // the flags are seen from behind, so mirror everything typographic
+  ctx.save();
+  ctx.translate(W, 0);
+  ctx.scale(-1, 1);
+
+  const cream = a => `rgba(248,240,226,${a})`;
+
+  // fine inner rule
+  ctx.strokeStyle = cream(0.32);
+  ctx.lineWidth = 2;
+  ctx.strokeRect(104, 92, W - 208, H - 184);
+
+  // label — spaced small caps, sized to fit
+  const spacing = 0.08;
+  let size = 240;
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+  const measure = s => {
+    ctx.font = `600 ${s}px "Cormorant Garamond", Georgia, serif`;
+    return ctx.measureText(label).width + s * spacing * (label.length - 1);
+  };
+  while (measure(size) > W - 260 && size > 40) size -= 4;
+  ctx.font = `600 ${size}px "Cormorant Garamond", Georgia, serif`;
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
+  const total = measure(size);
+  const ty = H / 2 - size * 0.08;
+  let x = (W - total) / 2;
+  ctx.fillStyle = cream(0.95);
+  ctx.shadowColor = 'rgba(50,0,0,0.35)';
+  ctx.shadowOffsetY = 2;
+  for (const ch of label) {
+    ctx.fillText(ch, x, ty);
+    x += ctx.measureText(ch).width + size * spacing;
+  }
+  ctx.shadowColor = 'transparent';
+
+  // hairline rule with a centred diamond
+  const ry = ty + size * 0.56, half = Math.min(total * 0.42, 190), cx = W / 2;
+  ctx.strokeStyle = cream(0.55);
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(cx - half, ry); ctx.lineTo(cx - 16, ry);
+  ctx.moveTo(cx + 16, ry);   ctx.lineTo(cx + half, ry);
+  ctx.stroke();
+  ctx.fillStyle = cream(0.7);
+  ctx.beginPath();
+  ctx.moveTo(cx, ry - 7); ctx.lineTo(cx + 7, ry); ctx.lineTo(cx, ry + 7); ctx.lineTo(cx - 7, ry);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return tex;
+}
+
+const INK_FLAG_VERT = `
+  uniform float uTime, uAmplitude, uFrequency, uPhase;
+  varying vec2 vUv;
+  varying float vSlope;
+  void main() {
+    vUv = uv;
+    vec3 pos = position;
+    float anchor = 1.0 - vUv.x;
+    float t = uTime + uPhase;
+    float a1 = pos.x * uFrequency + t, a2 = pos.x * uFrequency * 1.5 + t * 1.2;
+    float wave = sin(a1) + sin(a2);
+    pos.z += wave * anchor * uAmplitude;
+    pos.y += sin(pos.x * uFrequency * 0.9 + t * 0.85) * anchor * uAmplitude * 0.12;
+    // slope of the cloth along x, used to shade the folds
+    vSlope = (cos(a1) + 1.5 * cos(a2)) * uFrequency * anchor * uAmplitude;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+  }
+`;
+
+const INK_FLAG_FRAG = `
+  uniform sampler2D uTexture;
+  uniform float uSeed;
+  varying vec2 vUv;
+  varying float vSlope;
+
+  float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+  float vn(vec2 p) {
+    vec2 i = floor(p), f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(h(i), h(i + vec2(1.0, 0.0)), f.x), mix(h(i + vec2(0.0, 1.0)), h(i + vec2(1.0, 1.0)), f.x), f.y);
+  }
+  // rugged, torn edge: stacked sines give sharp jagged teeth
+  float torn(float u, float s) {
+    return sin(u * 31.0 + s) * 0.014 + sin(u * 67.0 + s * 0.7) * 0.007 + sin(u * 113.0 + s * 1.9) * 0.003;
+  }
+
+  void main() {
+    vec3 color = texture2D(uTexture, vUv).rgb;
+    float x = vUv.x, y = vUv.y, s = uSeed * 17.0;
+
+    // edges (y offsets doubled: the flag is 2:1, so this keeps the border even)
+    float eL = 0.02 + torn(y, s);
+    float eR = 0.955 - torn(y, s + 2.0);
+    float eB = 0.03 + torn(x * 0.87, s + 4.0);
+    float eT = 0.96 - torn(x * 0.81, s + 6.0);
+    float alpha = smoothstep(eL - 0.006, eL + 0.004, x) * smoothstep(eR + 0.006, eR - 0.004, x)
+                * smoothstep(eB - 0.01, eB + 0.007, y) * smoothstep(eT + 0.01, eT - 0.007, y);
+
+    // distance in from the edge, in equal physical units
+    float dx = min(x - eL, eR - x);
+    float dy = min(y - eB, eT - y) * 0.5;
+    float d = min(dx, dy);
+
+    // pigment pools toward the edge, like watercolour drying
+    color *= 1.0 - 0.2 * (1.0 - smoothstep(0.0, 0.1, d));
+
+    // brush outline: pressure swells along the stroke, dry-brush streaks break it in places
+    float along = dx < dy ? y * 0.5 : x;
+    float w = 0.024 + (vn(vec2(along * 7.0, s + 9.0)) - 0.5) * 0.014 + sin(along * 61.0 + s) * 0.003;
+    float stroke = 1.0 - smoothstep(w, w + 0.006, d);
+    float dry = smoothstep(0.55, 0.85, vn(vec2(along * 4.5, s + 11.0)));
+    float streak = smoothstep(0.35, 0.7, vn(vec2(along * 40.0, d * 900.0)));
+    float ink = 1.0 - dry * streak * 0.45;
+    color = mix(color, vec3(0.07, 0.06, 0.055), stroke * ink * 0.96);
+
+    // light falling across the folds, with a faint silk sheen on the crests
+    float sl = clamp(vSlope, -1.0, 1.0);
+    color *= 1.0 + sl * 0.14;
+    color += vec3(1.0, 0.9, 0.85) * pow(max(sl, 0.0), 3.0) * 0.06;
+
+    // paper grain
+    color *= 0.975 + 0.05 * h(floor(vUv * vec2(700.0, 350.0)));
+
+    gl_FragColor = vec4(color, alpha);
+  }
+`;
+
+const flagMats = [];
+// Builds a pole + banner; the group is positioned at `base` (+ `offset`) and rises at `at`.
+function makeInkFlag({ label, seed, base, offset, rotY, meshPos, at }) {
+  const group = new THREE.Group();
+  group.position.set(base.x + offset[0], base.y + offset[1], base.z + offset[2]);
+  group.scale.setScalar(FLAG_SCALE);
+
+  const inkMat = new THREE.MeshBasicMaterial({ color: 0x15110d });
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.03, POLE_H, 10), inkMat);
+  pole.position.y = POLE_H / 2;
+  const finial = new THREE.Mesh(new THREE.SphereGeometry(0.038, 14, 10), inkMat);
+  finial.position.y = POLE_H + 0.03;
+  group.add(pole, finial);
+
+  const mat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime:      { value: 0.0 },
+      uAmplitude: { value: 0.15 },
+      uFrequency: { value: 2.6 },
+      uPhase:     { value: seed * 1.7 },
+      uSeed:      { value: seed },
+      uTexture:   { value: makeFlagTexture(label, seed) },
+    },
+    vertexShader: INK_FLAG_VERT,
+    fragmentShader: INK_FLAG_FRAG,
+    transparent: true,
+    side: THREE.DoubleSide,
+  });
+  flagMats.push(mat);
+
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(FLAG_W, FLAG_H, 48, 24), mat);
+  mesh.rotation.y = rotY;
+  mesh.position.set(meshPos[0], POLE_H - FLAG_H * 0.55, meshPos[1]);
+  group.add(mesh);
+
+  scene.add(group);
+  registerPopFlag(group, at);
+  return group;
+}
+
 const TRAIL_N = 120;
 const loader = new THREE.TextureLoader();
 loader.load(HM_FILE, async (heightTex) => {
@@ -543,358 +786,12 @@ loader.load(HM_FILE, async (heightTex) => {
   trail.renderOrder = 0;
   scene.add(trail);
 
-  // --- FLAG AT PEAK ---
-  const peak = surfacePoints[surfacePoints.length - 1];
-
-  // Flagpole
-  const POLE_H = 1;
-  const poleGeo = new THREE.CylinderGeometry(0.03, 0.05, POLE_H, 8);
-  const poleMat = new THREE.MeshBasicMaterial({ color: 0x1a0f06 });
-  const pole = new THREE.Mesh(poleGeo, poleMat);
-  pole.position.y = POLE_H / 2; // local — relative to group
-  const connectFlag = new THREE.Group();
-  connectFlag.position.set(peak.x, peak.y, peak.z);
-  connectFlag.add(pole);
-  scene.add(connectFlag);
-
-  // CanvasTexture — "CONNECT" on parchment
-  const FLAG_W = 1.5, FLAG_H = .75;
-  const texC = document.createElement('canvas');
-  texC.width = 512; texC.height = 218;
-  const texCtx = texC.getContext('2d');
-
-  // trail red #B22222
-  const grad = texCtx.createLinearGradient(0, 0, 512, 218);
-  grad.addColorStop(0,   '#9e1c1c');
-  grad.addColorStop(0.5, '#B22222');
-  grad.addColorStop(1,   '#8e1818');
-  texCtx.fillStyle = grad;
-  texCtx.fillRect(0, 0, 512, 218);
-
-  // subtle grain lines
-  texCtx.strokeStyle = 'rgba(255,220,200,0.06)';
-  texCtx.lineWidth = 1;
-  for (let y = 0; y < 218; y += 6) {
-    texCtx.beginPath(); texCtx.moveTo(0, y); texCtx.lineTo(512, y); texCtx.stroke();
-  }
-
-  // text — white on red
-  texCtx.save();
-  texCtx.translate(512, 0);
-  texCtx.scale(-1, 1);
-  texCtx.font = '600 88px "Cormorant Garamond", Georgia, serif';
-  texCtx.textAlign = 'center';
-  texCtx.textBaseline = 'middle';
-  texCtx.fillStyle = 'rgba(249,247,242,0.92)';
-  texCtx.fillText('CONNECT', 256, 109);
-  texCtx.strokeStyle = 'rgba(249,247,242,0.30)';
-  texCtx.lineWidth = 1.5;
-  texCtx.beginPath(); texCtx.moveTo(60, 155); texCtx.lineTo(452, 155); texCtx.stroke();
-  texCtx.restore();
-
-  const flagTex = new THREE.CanvasTexture(texC);
-
-  // Flag shaders
-  const flagVert = `
-    uniform float uTime;
-    uniform float uAmplitude;
-    uniform float uFrequency;
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      vec3 pos = position;
-      // dual sine for organic, non-robotic wind — anchored at uv.x = 0 (left/pole side)
-      float wave = sin(pos.x * uFrequency + uTime)
-                 + sin(pos.x * uFrequency * 1.5 + uTime * 1.2);
-      float anchor = 1.0 - vUv.x; // 0 at pole, 1 at free end
-      pos.z += wave * anchor * uAmplitude;
-      // slight vertical breathe
-      pos.y += sin(pos.x * uFrequency * 0.9 + uTime * 0.85) * anchor * uAmplitude * 0.12;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-    }
-  `;
-
-  const flagFrag = `
-    uniform sampler2D uTexture;
-    varying vec2 vUv;
-    void main() {
-      vec4 tex = texture2D(uTexture, vUv);
-      vec3 red = vec3(0.698, 0.133, 0.133); // #B22222 — trail red
-      vec3 color = mix(red, tex.rgb, 0.92);
-
-      // torn / hand-cut edge: high-freq sine noise on each border
-      float nx = sin(vUv.y * 31.0) * 0.014 + sin(vUv.y * 67.0) * 0.007;
-      float ny = sin(vUv.x * 27.0) * 0.013 + sin(vUv.x * 53.0) * 0.008;
-      float edgeL = smoothstep(0.00 + nx, 0.05 + nx, vUv.x);
-      float edgeR = smoothstep(1.00 - nx, 0.90 - nx, vUv.x);
-      float edgeB = smoothstep(0.00 + ny, 0.06 + ny, vUv.y);
-      float edgeT = smoothstep(1.00 - ny, 0.91 - ny, vUv.y);
-      float alpha = edgeL * edgeR * edgeB * edgeT;
-
-      // vignette darkening toward torn edges
-      float vign = 1.0 - (1.0 - edgeL) * 0.6 - (1.0 - edgeR) * 0.4;
-      color *= vign;
-
-      gl_FragColor = vec4(color, alpha * 0.96);
-    }
-  `;
-
-  flagMat = new THREE.ShaderMaterial({
-    uniforms: {
-      uTime:      { value: 0.0 },
-      uAmplitude: { value: 0.16 },
-      uFrequency: { value: 2.8 },
-      uTexture:   { value: flagTex },
-    },
-    vertexShader:   flagVert,
-    fragmentShader: flagFrag,
-    transparent: true,
-    side: THREE.DoubleSide,
-  });
-
-  const flagGeo = new THREE.PlaneGeometry(FLAG_W, FLAG_H, 40, 20);
-  const flagMesh = new THREE.Mesh(flagGeo, flagMat);
-  flagMesh.rotation.y = 7 * Math.PI / 4;
-  flagMesh.position.set(-0.5, POLE_H - FLAG_H * 0.55, -FLAG_W / 2 + 0.3); // local — relative to group
-  connectFlag.add(flagMesh);
-
-  // --- EXPERIENCE FLAG — 70% along the trail ---
-  const expPoint = surfacePoints[Math.floor(0.70 * (TRAIL_N - 1))];
-
-  const expPole = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.03, 0.05, POLE_H, 8),
-    new THREE.MeshBasicMaterial({ color: 0x1a0f06 })
-  );
-  expPole.position.y = POLE_H / 2; // local — relative to group
-  const experienceFlag = new THREE.Group();
-  experienceFlag.position.set(expPoint.x - 1.1, expPoint.y - 3, expPoint.z - 0.8);
-  experienceFlag.add(expPole);
-  scene.add(experienceFlag);
-
-  // Canvas texture — "EXPERIENCE"
-  const texC2 = document.createElement('canvas');
-  texC2.width = 512; texC2.height = 218;
-  const tc2 = texC2.getContext('2d');
-  const grad2 = tc2.createLinearGradient(0, 0, 512, 218);
-  grad2.addColorStop(0,   '#9e1c1c');
-  grad2.addColorStop(0.5, '#B22222');
-  grad2.addColorStop(1,   '#8e1818');
-  tc2.fillStyle = grad2;
-  tc2.fillRect(0, 0, 512, 218);
-  tc2.strokeStyle = 'rgba(255,220,200,0.06)';
-  tc2.lineWidth = 1;
-  for (let yi = 0; yi < 218; yi += 6) {
-    tc2.beginPath(); tc2.moveTo(0, yi); tc2.lineTo(512, yi); tc2.stroke();
-  }
-  tc2.save();
-  tc2.translate(512, 0);
-  tc2.scale(-1, 1);
-  tc2.font = '600 62px "Cormorant Garamond", Georgia, serif';
-  tc2.textAlign = 'center';
-  tc2.textBaseline = 'middle';
-  tc2.fillStyle = 'rgba(249,247,242,0.92)';
-  tc2.fillText('EXPERIENCE', 256, 105);
-  tc2.strokeStyle = 'rgba(249,247,242,0.30)';
-  tc2.lineWidth = 1.5;
-  tc2.beginPath(); tc2.moveTo(40, 150); tc2.lineTo(472, 150); tc2.stroke();
-  tc2.restore();
-  const flagTex2 = new THREE.CanvasTexture(texC2);
-
-  const expFlagVert = `
-    uniform float uTime; uniform float uAmplitude; uniform float uFrequency;
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      vec3 pos = position;
-      float anchor = 1.0 - vUv.x;
-      float wave = sin(pos.x * uFrequency + uTime) + sin(pos.x * uFrequency * 1.5 + uTime * 1.2);
-      pos.z += wave * anchor * uAmplitude;
-      pos.y += sin(pos.x * uFrequency * 0.9 + uTime * 0.85) * anchor * uAmplitude * 0.12;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-    }
-  `;
-  const expFlagFrag = `
-    uniform sampler2D uTexture;
-    varying vec2 vUv;
-    void main() {
-      vec4 tex = texture2D(uTexture, vUv);
-      vec3 red = vec3(0.698, 0.133, 0.133);
-      vec3 color = mix(red, tex.rgb, 0.92);
-      float nx = sin(vUv.y * 31.0) * 0.014 + sin(vUv.y * 67.0) * 0.007;
-      float ny = sin(vUv.x * 27.0) * 0.013 + sin(vUv.x * 53.0) * 0.008;
-      float alpha = smoothstep(0.00+nx,0.05+nx,vUv.x) * smoothstep(1.00-nx,0.90-nx,vUv.x)
-                  * smoothstep(0.00+ny,0.06+ny,vUv.y) * smoothstep(1.00-ny,0.91-ny,vUv.y);
-      gl_FragColor = vec4(color, alpha * 0.96);
-    }
-  `;
-  flagMat2 = new THREE.ShaderMaterial({
-    uniforms: { uTime: { value: 0.0 }, uAmplitude: { value: 0.16 }, uFrequency: { value: 2.8 }, uTexture: { value: flagTex2 } },
-    vertexShader: expFlagVert, fragmentShader: expFlagFrag,
-    transparent: true, side: THREE.DoubleSide,
-  });
-
-  const expFlagGeo = new THREE.PlaneGeometry(FLAG_W, FLAG_H, 40, 20);
-  const expFlagMesh = new THREE.Mesh(expFlagGeo, flagMat2);
-  expFlagMesh.rotation.y = Math.PI / 4;
-  expFlagMesh.position.set(-0.5, POLE_H - FLAG_H * 0.55, -FLAG_W / 2 + 1.2); // local — relative to group
-  experienceFlag.add(expFlagMesh);
-
-
-  // --- ABOUT FLAG — start of trail ---
-  const aboutPoint = surfacePoints[0];
-
-  const aboutPole = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.03, 0.05, POLE_H, 8),
-    new THREE.MeshBasicMaterial({ color: 0x1a0f06 })
-  );
-  aboutPole.position.y = POLE_H / 2;
-  const aboutFlagGroup = new THREE.Group();
-  aboutFlagGroup.position.set(aboutPoint.x, aboutPoint.y, aboutPoint.z);
-  aboutFlagGroup.add(aboutPole);
-  scene.add(aboutFlagGroup);
-
-  // Canvas texture — "ABOUT"
-  const texC3 = document.createElement('canvas');
-  texC3.width = 512; texC3.height = 218;
-  const tc3 = texC3.getContext('2d');
-  const grad3 = tc3.createLinearGradient(0, 0, 512, 218);
-  grad3.addColorStop(0,   '#9e1c1c');
-  grad3.addColorStop(0.5, '#B22222');
-  grad3.addColorStop(1,   '#8e1818');
-  tc3.fillStyle = grad3;
-  tc3.fillRect(0, 0, 512, 218);
-  tc3.strokeStyle = 'rgba(255,220,200,0.06)';
-  tc3.lineWidth = 1;
-  for (let yi = 0; yi < 218; yi += 6) {
-    tc3.beginPath(); tc3.moveTo(0, yi); tc3.lineTo(512, yi); tc3.stroke();
-  }
-  tc3.save();
-  tc3.translate(512, 0);
-  tc3.scale(-1, 1);
-  tc3.font = '600 88px "Cormorant Garamond", Georgia, serif';
-  tc3.textAlign = 'center';
-  tc3.textBaseline = 'middle';
-  tc3.fillStyle = 'rgba(249,247,242,0.92)';
-  tc3.fillText('ABOUT', 256, 105);
-  tc3.strokeStyle = 'rgba(249,247,242,0.30)';
-  tc3.lineWidth = 1.5;
-  tc3.beginPath(); tc3.moveTo(60, 150); tc3.lineTo(452, 150); tc3.stroke();
-  tc3.restore();
-
-  flagMat3 = new THREE.ShaderMaterial({
-    uniforms: { uTime: { value: 0.0 }, uAmplitude: { value: 0.16 }, uFrequency: { value: 2.8 }, uTexture: { value: new THREE.CanvasTexture(texC3) } },
-    vertexShader: expFlagVert, fragmentShader: expFlagFrag,
-    transparent: true, side: THREE.DoubleSide,
-  });
-
-  const aboutFlagMesh = new THREE.Mesh(new THREE.PlaneGeometry(FLAG_W, FLAG_H, 40, 20), flagMat3);
-  aboutFlagMesh.rotation.y = 5*Math.PI / 4;
-  aboutFlagMesh.position.set(-0.5 + 1, POLE_H - FLAG_H * 0.55, -FLAG_W / 2 + 0.3);
-  aboutFlagGroup.add(aboutFlagMesh);
-
-  // --- ART FLAG — 30% along the trail ---
-  const artPoint = surfacePoints[Math.floor(0.30 * (TRAIL_N - 1))];
-
-  const artPole = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.03, 0.05, POLE_H, 8),
-    new THREE.MeshBasicMaterial({ color: 0x1a0f06 })
-  );
-  artPole.position.y = POLE_H / 2;
-  const artFlagGroup = new THREE.Group();
-  artFlagGroup.position.set(artPoint.x + 0.3, artPoint.y, artPoint.z + 0.9);
-  artFlagGroup.add(artPole);
-  scene.add(artFlagGroup);
-
-  const texC4 = document.createElement('canvas');
-  texC4.width = 512; texC4.height = 218;
-  const tc4 = texC4.getContext('2d');
-  const grad4 = tc4.createLinearGradient(0, 0, 512, 218);
-  grad4.addColorStop(0,   '#9e1c1c');
-  grad4.addColorStop(0.5, '#B22222');
-  grad4.addColorStop(1,   '#8e1818');
-  tc4.fillStyle = grad4;
-  tc4.fillRect(0, 0, 512, 218);
-  tc4.strokeStyle = 'rgba(255,220,200,0.06)';
-  tc4.lineWidth = 1;
-  for (let yi = 0; yi < 218; yi += 6) {
-    tc4.beginPath(); tc4.moveTo(0, yi); tc4.lineTo(512, yi); tc4.stroke();
-  }
-  tc4.save();
-  tc4.translate(512, 0);
-  tc4.scale(-1, 1);
-  tc4.font = '600 88px "Cormorant Garamond", Georgia, serif';
-  tc4.textAlign = 'center';
-  tc4.textBaseline = 'middle';
-  tc4.fillStyle = 'rgba(249,247,242,0.92)';
-  tc4.fillText('ART', 256, 105);
-  tc4.strokeStyle = 'rgba(249,247,242,0.30)';
-  tc4.lineWidth = 1.5;
-  tc4.beginPath(); tc4.moveTo(60, 150); tc4.lineTo(452, 150); tc4.stroke();
-  tc4.restore();
-
-  flagMat4 = new THREE.ShaderMaterial({
-    uniforms: { uTime: { value: 0.0 }, uAmplitude: { value: 0.16 }, uFrequency: { value: 2.8 }, uTexture: { value: new THREE.CanvasTexture(texC4) } },
-    vertexShader: expFlagVert, fragmentShader: expFlagFrag,
-    transparent: true, side: THREE.DoubleSide,
-  });
-
-  const artFlagMesh = new THREE.Mesh(new THREE.PlaneGeometry(FLAG_W, FLAG_H, 40, 20), flagMat4);
-  artFlagMesh.rotation.y = 3 * Math.PI / 4;
-  artFlagMesh.position.set(0.4, POLE_H - FLAG_H * 0.55, -FLAG_W / 2 + 1.2);
-  artFlagGroup.add(artFlagMesh);
-
-
-  // --- PROJECTS FLAG — 50% along the trail ---
-  const projPoint = surfacePoints[Math.floor(0.50 * (TRAIL_N - 1))];
-
-  const projPole = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.03, 0.05, POLE_H, 8),
-    new THREE.MeshBasicMaterial({ color: 0x1a0f06 })
-  );
-  projPole.position.y = POLE_H / 2;
-  const projFlagGroup = new THREE.Group();
-  projFlagGroup.position.set(projPoint.x - 0.7, projPoint.y - 1.3, projPoint.z + 1.4);
-  projFlagGroup.add(projPole);
-  scene.add(projFlagGroup);
-
-  const texC5 = document.createElement('canvas');
-  texC5.width = 512; texC5.height = 218;
-  const tc5 = texC5.getContext('2d');
-  const grad5 = tc5.createLinearGradient(0, 0, 512, 218);
-  grad5.addColorStop(0,   '#9e1c1c');
-  grad5.addColorStop(0.5, '#B22222');
-  grad5.addColorStop(1,   '#8e1818');
-  tc5.fillStyle = grad5;
-  tc5.fillRect(0, 0, 512, 218);
-  tc5.strokeStyle = 'rgba(255,220,200,0.06)';
-  tc5.lineWidth = 1;
-  for (let yi = 0; yi < 218; yi += 6) {
-    tc5.beginPath(); tc5.moveTo(0, yi); tc5.lineTo(512, yi); tc5.stroke();
-  }
-  tc5.save();
-  tc5.translate(512, 0);
-  tc5.scale(-1, 1);
-  tc5.font = '600 72px "Cormorant Garamond", Georgia, serif';
-  tc5.textAlign = 'center';
-  tc5.textBaseline = 'middle';
-  tc5.fillStyle = 'rgba(249,247,242,0.92)';
-  tc5.fillText('PROJECTS', 256, 105);
-  tc5.strokeStyle = 'rgba(249,247,242,0.30)';
-  tc5.lineWidth = 1.5;
-  tc5.beginPath(); tc5.moveTo(40, 150); tc5.lineTo(472, 150); tc5.stroke();
-  tc5.restore();
-
-  flagMat5 = new THREE.ShaderMaterial({
-    uniforms: { uTime: { value: 0.0 }, uAmplitude: { value: 0.16 }, uFrequency: { value: 2.8 }, uTexture: { value: new THREE.CanvasTexture(texC5) } },
-    vertexShader: expFlagVert, fragmentShader: expFlagFrag,
-    transparent: true, side: THREE.DoubleSide,
-  });
-
-  const projFlagMesh = new THREE.Mesh(new THREE.PlaneGeometry(FLAG_W, FLAG_H, 40, 20), flagMat5);
-  projFlagMesh.rotation.y = Math.PI / 2;
-  projFlagMesh.position.set(0, POLE_H - FLAG_H * 0.55, -FLAG_W / 2 + 1.4);
-  projFlagGroup.add(projFlagMesh);
-
+  // --- FLAGS (rise as the red trail reaches each one) ---
+  const trailAt = f => surfacePoints[Math.floor(f * (TRAIL_N - 1))];
+  makeInkFlag({ label: 'ART',        seed: 1, base: trailAt(0.30), offset: [0.3, 0, 0.9],     rotY: 3 * Math.PI / 4, meshPos: [0.4, -FLAG_W / 2 + 1.2],  at: 0.30 });
+  makeInkFlag({ label: 'PROJECTS',   seed: 2, base: trailAt(0.50), offset: [-0.7, -1.3, 1.4], rotY: Math.PI / 2,     meshPos: [0, -FLAG_W / 2 + 1.4],    at: 0.50 });
+  makeInkFlag({ label: 'EXPERIENCE', seed: 3, base: trailAt(0.70), offset: [-1.1, -3, -0.8],  rotY: Math.PI / 4,     meshPos: [-0.5, -FLAG_W / 2 + 1.2], at: 0.70 });
+  makeInkFlag({ label: 'CONNECT',    seed: 4, base: surfacePoints[surfacePoints.length - 1], offset: [0, 0, 0], rotY: 7 * Math.PI / 4, meshPos: [-0.5, -FLAG_W / 2 + 0.3], at: 0.97 });
 });
 
 const camPath = new THREE.CatmullRomCurve3([
@@ -904,9 +801,8 @@ const camPath = new THREE.CatmullRomCurve3([
 
 function remapScroll(raw) {
   const segs = [
-    [0.00, 0.02, 0.00, 0.10],  // arrive at About
-    [0.02, 0.18, 0.10, 0.11],  // pause — About
-    [0.18, 0.22, 0.11, 0.30],  // move to Art
+    [0.00, 0.08, 0.00, 0.03],  // hero title lifts away
+    [0.08, 0.22, 0.03, 0.30],  // fly up to Art
     [0.22, 0.38, 0.30, 0.31],  // pause — Art
     [0.38, 0.42, 0.31, 0.50],  // move to Projects
     [0.42, 0.58, 0.50, 0.51],  // pause — Projects
@@ -921,10 +817,8 @@ function remapScroll(raw) {
   return 0.99;
 }
 
-const ANCHORS = ['cp1', 'cp-github', 'cp-art', 'cp-connect-left', 'cp-connect'];
+const ANCHORS = ['cp-art', 'cp-connect-left', 'cp-connect'];
 const ANCHOR_ZONES = {
-  'cp1':             [-0.1, 0.20],
-  'cp-github':       [-0.1, 0.20],
   'cp-art':          [0.20, 0.40],
   'cp-connect-left': [0.80, 1.1],
   'cp-connect':      [0.80, 1.1],
@@ -954,8 +848,21 @@ function updateExpOverlay(raw) {
   driveOverlay(exp2Overlay, exp2Inner, EXP2_START, EXP2_END, raw);
 }
 
+const heroEl = document.getElementById('hero');
+const HERO_END = 0.08;
+let heroExit = 0;
+function updateHero(raw) {
+  if (!heroEl) return;
+  const t = Math.min(Math.max(raw / HERO_END, 0), 1);
+  const e = t * t * (3 - 2 * t); // smoothstep
+  heroExit = e;
+  heroEl.style.setProperty('--hero-exit', e.toFixed(3));
+  heroEl.style.visibility = e >= 0.999 ? 'hidden' : 'visible';
+}
+
 function updateAnchors() {
   const raw = scrollProgress;
+  updateHero(raw);
   const fade = 0.03;
   ANCHORS.forEach(id => {
     const el = document.getElementById(id);
@@ -983,6 +890,7 @@ let scrollProgress = 0;
 function animate() {
   requestAnimationFrame(animate);
   const clock = performance.now() * 0.001;
+  flagMats.forEach(m => { m.uniforms.uTime.value = clock; });
   const p = Math.min(Math.max(remapScroll(scrollProgress), 0), 0.99);
   camera.position.lerp(camPath.getPoint(p), 0.06);
   camera.lookAt(0, p * 10, 0);
@@ -994,14 +902,11 @@ function animate() {
   camera.updateProjectionMatrix();
 
   if (trail) trail.geometry.setDrawRange(0, Math.floor(scrollProgress * trail.geometry.index.count));
-  if (flagMat) flagMat.uniforms.uTime.value = clock;
-  if (flagMat2) flagMat2.uniforms.uTime.value = clock;
-  if (flagMat3) flagMat3.uniforms.uTime.value = clock;
-  if (flagMat4) flagMat4.uniforms.uTime.value = clock;
-  if (flagMat5) flagMat5.uniforms.uTime.value = clock;
 
 
   updateAnchors();
+  updatePopFlags(scrollProgress);
+
 
   birdClusters.forEach(cluster => {
     cluster.children.forEach(s => {

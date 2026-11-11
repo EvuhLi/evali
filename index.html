@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <title>Eva Li</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&display=swap">
 <link rel="stylesheet" href="style.css">
 <link rel="icon" type="image/x-icon" href="image.png">
 
@@ -10,104 +14,63 @@
 <body>
 <div id="scroll-space"></div>
 
-<!-- Side cards: each .cp-item is a small clickable name card -->
-
-<div class="cp-text" id="cp1">
-  <div class="about-header">
-    <h2>Evangeline<br>Li</h2>
-    <div class="about-rule"></div>
+<!-- ── HERO / OPENER ── -->
+<header id="hero" aria-label="Introduction">
+  <h1 class="hero-name" aria-label="Evangeline Li"><span class="hero-word" aria-hidden="true">Evangeline</span> <span class="hero-word" aria-hidden="true">Li</span></h1>
+  <div class="hero-rule" aria-hidden="true"></div>
+  <p class="hero-eyebrow"><span class="hero-eyebrow-school">Carnegie Mellon University</span><span>Computer Science &amp; Information Systems</span></p>
+  <div class="hero-cue" aria-hidden="true">
+    <span>Scroll to begin</span>
+    <span class="hero-cue-line"></span>
   </div>
-  <p class="about-bio">Hi! I'm studying Information Systems and Computer Science at CMU. I love learning and building systems that help people!</p>
-  
-  <div class="about-links">
-    <a class="connect-link" href="https://github.com/EvuhLi" target="_blank" rel="noopener">
-      <svg class="connect-link-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-      GitHub
-    </a>
-    <a class="connect-link" href="https://www.linkedin.com/in/evangeline-li-85704619a/" target="_blank" rel="noopener">
-      <svg class="connect-link-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-      LinkedIn
-    </a>
-    <div class="connect-email-row">
-      <a class="connect-link" href="mailto:lievayifan@gmail.com">
-        <svg class="connect-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
-        lievayifan@gmail.com
-      </a>
-      <button class="connect-copy" id="about-email-copy-btn" aria-label="Copy email">
-        <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        <span class="copy-tooltip">Copied!</span>
-      </button>
-    </div>
-  </div>
-</div>
-
-<div class="cp-text" id="cp-github">
-  <div class="gh-header">
-    <svg class="gh-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-    <span class="gh-title">@EvuhLi</span>
-  </div>
-  <div class="gh-rule"></div>
-  <div class="gh-stats">
-    <div class="gh-stat">
-      <span class="gh-stat-val" id="gh-repos">—</span>
-      <span class="gh-stat-key">repos</span>
-    </div>
-    <div class="gh-stat">
-      <span class="gh-stat-val" id="gh-commits">—</span>
-      <span class="gh-stat-key">commits</span>
-    </div>
-  </div>
-  <div class="gh-langs-label">languages</div>
-  <div class="gh-langs" id="gh-langs"></div>
-  <div class="gh-updated" id="gh-updated"></div>
-</div>
+</header>
 
 <div class="cp-text" id="cp-art">
   <!-- left column — scrolls down -->
   <div class="art-col" id="art-col-left">
     <div class="art-track art-track--down">
-      <div class="art-frame"><img src="Photos-3-001/IMG_5279.JPG" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_5286.JPG" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_5284.JPG" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_6321.jpg" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_2760.jpg" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/polish_save.png" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_5283.JPG" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_8256.jpg" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/8dfea5e534a81dc823022502bb8f1044.jpg" alt=""></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_5279.webp" data-full="img/art/full/IMG_5279.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_5286.webp" data-full="img/art/full/IMG_5286.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_5284.webp" data-full="img/art/full/IMG_5284.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_6321.webp" data-full="img/art/full/IMG_6321.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_2760.webp" data-full="img/art/full/IMG_2760.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/polish_save.webp" data-full="img/art/full/polish_save.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_5283.webp" data-full="img/art/full/IMG_5283.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_8256.webp" data-full="img/art/full/IMG_8256.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/8dfea5e534a81dc823022502bb8f1044.webp" data-full="img/art/full/8dfea5e534a81dc823022502bb8f1044.webp" alt="" loading="lazy" decoding="async"></div>
 
-      <div class="art-frame"><img src="Photos-3-001/IMG_5279.JPG" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_5286.JPG" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_5284.JPG" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_6321.jpg" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_2760.jpg" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/polish_save.png" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_5283.JPG" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_8256.jpg" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/8dfea5e534a81dc823022502bb8f1044.jpg" alt=""></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_5279.webp" data-full="img/art/full/IMG_5279.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_5286.webp" data-full="img/art/full/IMG_5286.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_5284.webp" data-full="img/art/full/IMG_5284.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_6321.webp" data-full="img/art/full/IMG_6321.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_2760.webp" data-full="img/art/full/IMG_2760.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/polish_save.webp" data-full="img/art/full/polish_save.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_5283.webp" data-full="img/art/full/IMG_5283.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_8256.webp" data-full="img/art/full/IMG_8256.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/8dfea5e534a81dc823022502bb8f1044.webp" data-full="img/art/full/8dfea5e534a81dc823022502bb8f1044.webp" alt="" loading="lazy" decoding="async"></div>
     </div>
   </div>
   
   <!-- right column — scrolls up -->
   <div class="art-col" id="art-col-right">
     <div class="art-track art-track--up">
-      <div class="art-frame"><img src="Photos-3-001/Untitled11_20240417132729.png" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_5281.JPG" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_5282.JPG" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/20221124_012101.jpg" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_8836.JPG" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_0917.JPG" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_0922.JPG" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_0920.JPG" alt=""></div>
+      <div class="art-frame"><img src="img/art/thumb/Untitled11_20240417132729.webp" data-full="img/art/full/Untitled11_20240417132729.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_5281.webp" data-full="img/art/full/IMG_5281.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_5282.webp" data-full="img/art/full/IMG_5282.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/20221124_012101.webp" data-full="img/art/full/20221124_012101.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_8836.webp" data-full="img/art/full/IMG_8836.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_0917.webp" data-full="img/art/full/IMG_0917.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_0922.webp" data-full="img/art/full/IMG_0922.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_0920.webp" data-full="img/art/full/IMG_0920.webp" alt="" loading="lazy" decoding="async"></div>
 
-      <div class="art-frame"><img src="Photos-3-001/Untitled11_20240417132729.png" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_5281.JPG" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_5282.JPG" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/20221124_012101.jpg" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_8836.JPG" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_0917.JPG" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_0922.JPG" alt=""></div>
-      <div class="art-frame"><img src="Photos-3-001/IMG_0920.JPG" alt=""></div>
+      <div class="art-frame"><img src="img/art/thumb/Untitled11_20240417132729.webp" data-full="img/art/full/Untitled11_20240417132729.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_5281.webp" data-full="img/art/full/IMG_5281.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_5282.webp" data-full="img/art/full/IMG_5282.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/20221124_012101.webp" data-full="img/art/full/20221124_012101.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_8836.webp" data-full="img/art/full/IMG_8836.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_0917.webp" data-full="img/art/full/IMG_0917.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_0922.webp" data-full="img/art/full/IMG_0922.webp" alt="" loading="lazy" decoding="async"></div>
+      <div class="art-frame"><img src="img/art/thumb/IMG_0920.webp" data-full="img/art/full/IMG_0920.webp" alt="" loading="lazy" decoding="async"></div>
     </div>
   </div>
 </div>
@@ -118,11 +81,11 @@
     <div class="exp-top-spacer"></div>
 
     <div class="exp-card exp-project exp-left" data-project="loom">
-      <div class="exp-project-img"><img src="project pics/loom.png" alt=""></div>
+      <div class="exp-project-img"><img src="img/projects/loom.webp" alt="" loading="lazy" decoding="async"></div>
       <div class="exp-card-body">
         <div class="exp-role">Loom</div>
         <div class="exp-tags"><span class="cp-lang-tag">React</span><span class="cp-lang-tag">Node.js/Express</span><span class="cp-lang-tag">Python</span><span class="cp-lang-tag">FastAPI</span><span class="cp-lang-tag">MongoDB</span><span class="cp-lang-tag">AWS S3</span></div>
-        <div class="exp-desc">Top finisher out of 55+ participants at Hacking4Humanity — a full-stack artist platform that fights AI art theft with an ensemble bot-detection service (MLP, logistic regression, DOM honeypot telemetry) and S3/Redis-backed feed infrastructure cutting feed load 50× and average document size 1,700×.</div>
+        <div class="exp-desc">1st place out of 55+ participants at Hacking4Humanity — a full-stack artist platform protecting human-made art, with a FastAPI ML microservice for ensemble bot detection (MLP, honeypots), PyTorch adversarial art cloaking, and CLIP tagging, plus an S3/CloudFront pipeline that cut feed latency from 2.5s to 50ms.</div>
         <div class="exp-links">
           <a href="https://github.com/EvuhLi/Loom" target="_blank" rel="noopener">GitHub →</a>
           <a href="https://loom-art-app.vercel.app/" target="_blank" rel="noopener">Live Demo →</a>
@@ -131,11 +94,11 @@
     </div>
 
     <div class="exp-card exp-project exp-right" data-project="minecraft">
-      <div class="exp-project-img"><img src="project pics/minecraftlive.png" alt=""></div>
+      <div class="exp-project-img"><img src="img/projects/minecraftlive.webp" alt="" loading="lazy" decoding="async"></div>
       <div class="exp-card-body">
         <div class="exp-role">Minecraft Live</div>
         <div class="exp-tags"><span class="cp-lang-tag">Python</span><span class="cp-lang-tag">MediaPipe</span><span class="cp-lang-tag">OpenCV</span><span class="cp-lang-tag">pynput</span></div>
-        <div class="exp-desc">A real-time motion controller translating 10+ body poses into Minecraft inputs at 15 ms/frame (66 FPS), with a cross-platform mobile controller over WebSockets/UDP and a configurable, debounced gesture state machine.</div>
+        <div class="exp-desc">A real-time motion controller translating 10+ body poses into Minecraft inputs at 66 FPS, with a cross-platform mobile controller over WebSockets/UDP (drift calibration, dead-zone filtering) and a configurable, debounced gesture state machine.</div>
         <div class="exp-links">
           <a href="https://github.com/EvuhLi/MinecraftLive" target="_blank" rel="noopener">GitHub →</a>
         </div>
@@ -143,7 +106,7 @@
     </div>
 
     <div class="exp-card exp-project exp-left" data-project="azul">
-      <div class="exp-project-img"><img src="project pics/azul.png" alt=""></div>
+      <div class="exp-project-img"><img src="img/projects/azul.webp" alt="" loading="lazy" decoding="async"></div>
       <div class="exp-card-body">
         <div class="exp-role">Azul Tile</div>
         <div class="exp-tags"><span class="cp-lang-tag">Java</span></div>
@@ -155,7 +118,7 @@
     </div>
 
     <div class="exp-card exp-project exp-right" data-project="sparrow">
-      <div class="exp-project-img"><img src="project pics/sparrow.png" alt=""></div>
+      <div class="exp-project-img"><img src="img/projects/sparrow.webp" alt="" loading="lazy" decoding="async"></div>
       <div class="exp-card-body">
         <div class="exp-role">Sparrow</div>
         <div class="exp-tags"><span class="cp-lang-tag">React</span><span class="cp-lang-tag">Node.js</span><span class="cp-lang-tag">MongoDB</span></div>
@@ -175,12 +138,55 @@
 
     <div class="exp-card exp-left">
       <div class="exp-card-body">
+        <div class="exp-role">Incoming Software Engineer Intern · Figma</div>
+        <div class="exp-date">Summer 2027</div>
+      </div>
+    </div>
+
+    <div class="exp-card exp-right">
+      <div class="exp-card-body">
+        <div class="exp-role">Software Engineer Intern · Google × CMU ScottyLabs</div>
+        <div class="exp-date">September 2026 – Present</div>
+        <div class="exp-tags"><span class="cp-lang-tag">Go</span><span class="cp-lang-tag">Kubernetes</span><span class="cp-lang-tag">AlloyDB Omni</span><span class="cp-lang-tag">client-go</span><span class="cp-lang-tag">Cobra</span></div>
+        <ul class="exp-bullets">
+          <li>Building adbo, a Go CLI that wraps the Google AlloyDB Omni Kubernetes Operator’s CRDs into simple commands for cluster provisioning, scaling, and backup/restore, eliminating manual YAML authoring for database management.</li>
+          <li>Implementing Kubernetes-native diagnostics and connectivity tooling, including automated port-forwarding and an aggregated cluster health dashboard.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="exp-card exp-left">
+      <div class="exp-card-body">
+        <div class="exp-role">Teaching Assistant · CMU 15-122: Principles of Imperative Computation</div>
+        <div class="exp-date">August 2026 – Present</div>
+        <div class="exp-tags"><span class="cp-lang-tag">C</span><span class="cp-lang-tag">C0</span><span class="cp-lang-tag">Data Structures</span><span class="cp-lang-tag">Algorithms</span></div>
+        <ul class="exp-bullets">
+          <li>TA for 500+ students, covering data structures, algorithms, and correctness proofs with contracts and loop invariants in C.</li>
+          <li>Led weekly recitations for 30+ students and held office hours, teaching asymptotic-complexity analysis.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="exp-card exp-right">
+      <div class="exp-card-body">
+        <div class="exp-role">Autonomous Robotics Research Assistant · RCHI Lab, ATDev</div>
+        <div class="exp-date">August 2026 – Present</div>
+        <div class="exp-tags"><span class="cp-lang-tag">YOLO</span><span class="cp-lang-tag">NVIDIA Jetson</span><span class="cp-lang-tag">PDDL</span><span class="cp-lang-tag">PyBullet</span></div>
+        <ul class="exp-bullets">
+          <li>Developing a 3D edge perception pipeline for wheelchair-mounted autonomous robotic feeding, using custom YOLO detection to achieve ±0.6 cm target accuracy at 30+ FPS on NVIDIA Jetson.</li>
+          <li>Integrated PDDL task planning with PyBullet simulation for feeding maneuvers across 50+ simulated test scenarios.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="exp-card exp-left">
+      <div class="exp-card-body">
         <div class="exp-role">Software Engineer Intern · Geom</div>
         <div class="exp-date">May 2026 – August 2026</div>
-        <div class="exp-tags"><span class="cp-lang-tag">TypeScript</span><span class="cp-lang-tag">Gemini</span><span class="cp-lang-tag">PostgreSQL</span><span class="cp-lang-tag">Stable Diffusion</span><span class="cp-lang-tag">ControlNet</span></div>
+        <div class="exp-tags"><span class="cp-lang-tag">PyTorch</span><span class="cp-lang-tag">TypeScript</span><span class="cp-lang-tag">Trimesh</span><span class="cp-lang-tag">Stable Diffusion</span><span class="cp-lang-tag">ControlNet (LoRA)</span><span class="cp-lang-tag">OpenCV</span></div>
         <ul class="exp-bullets">
-          <li>Architected an async TypeScript multi-panel rendering pipeline with Gemini using database heartbeats and PostgreSQL triggers to survive 150s timeouts across 4 concurrent panel renders, cutting render time 3hrs → 2mins.</li>
-          <li>Fine-tuned Stable Diffusion with ControlNet on paired architectural imagery, using edge/line conditioning to preserve floor-plan geometry and structural features, reducing render failures 31% → 5%.</li>
+          <li>Engineered a distributed ML pipeline using PyTorch, Trimesh, and TypeScript to create glTF/GLB 3D models from elevation plans with bounding-box text editing, cutting rendering time from 3 hours (manual) to 5 minutes (automated).</li>
+          <li>Fine-tuned Stable Diffusion via ControlNet (LoRA) using Hugging Face Diffusers and OpenCV Canny extraction, enforcing latent spatial conditioning on blueprints to cut renders requiring manual retry from 26% to 9%.</li>
           <li>Deployed workflows with enterprise homebuilders (Lennar, Century Communities), shipping renders into 100+ reports.</li>
         </ul>
       </div>
@@ -188,71 +194,44 @@
 
     <div class="exp-card exp-right">
       <div class="exp-card-body">
-        <div class="exp-role">15-122 Teaching Assistant · CMU SCS</div>
-        <div class="exp-date">August 2026 – Present</div>
-        <div class="exp-tags"><span class="cp-lang-tag">C</span><span class="cp-lang-tag">C0</span><span class="cp-lang-tag">Data Structures</span><span class="cp-lang-tag">Algorithms</span></div>
-        <ul class="exp-bullets">
-          <li>TA for 500+ students, covering data structures, algorithms, and correctness proofs with contracts and loop invariants in C.</li>
-          <li>Led weekly recitations for 20+ students and held office hours teaching asymptotic-complexity analysis.</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="exp-card exp-left">
-      <div class="exp-card-body">
         <div class="exp-role">Privacy and Security Research Assistant · CMU SCS</div>
         <div class="exp-date">May 2026 – August 2026</div>
         <div class="exp-tags"><span class="cp-lang-tag">PostgreSQL</span><span class="cp-lang-tag">Python</span><span class="cp-lang-tag">pandas</span></div>
         <ul class="exp-bullets">
-          <li>Presented research on production privacy systems at IEEE Symposium on Privacy Expectations (ISoPE) 2026.</li>
+          <li>Published research on production privacy systems at IEEE Symposium on Privacy Expectations (ISoPE) 2026.</li>
           <li>Designed and implemented a PostgreSQL database for an open-source taxonomy of 200+ privacy systems modeling relationships among system architectures, privacy mechanisms, and deployment characteristics.</li>
           <li>Engineered a pandas ETL pipeline to scrape and normalize 100+ heterogeneous datasets from industry sources.</li>
         </ul>
       </div>
     </div>
 
-    <div class="exp-card exp-right">
+    <div class="exp-card exp-left">
       <div class="exp-card-body">
         <div class="exp-role">Software Engineer Intern · Thursday Thrift</div>
         <div class="exp-date">May 2025 – August 2025</div>
-        <div class="exp-tags"><span class="cp-lang-tag">FastAPI</span><span class="cp-lang-tag">NestJS</span><span class="cp-lang-tag">pgvector</span><span class="cp-lang-tag">Redis</span></div>
+        <div class="exp-tags"><span class="cp-lang-tag">FastAPI</span><span class="cp-lang-tag">NestJS</span><span class="cp-lang-tag">TypeScript</span><span class="cp-lang-tag">pgvector</span><span class="cp-lang-tag">Redis</span></div>
         <ul class="exp-bullets">
-          <li>Designed and shipped a personalized clothing recommendation engine combining embedding generation with vector retrieval, achieving 99% embedding coverage and 2.4ms personalized scoring via in-process pgvector.</li>
-          <li>Optimized seller-facing APIs via Redis caching, cutting p99 latency 80%, boosting throughput 2.3x (2.8s to 560ms).</li>
-          <li>Migrated 20+ endpoints in the seller domain from FastAPI monolith into modular NestJS/TypeScript REST service.</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="exp-card exp-left">
-      <div class="exp-card-body">
-        <div class="exp-role">Resident Assistant · CMU Housing</div>
-        <div class="exp-date">May 2026 – August 2026</div>
-        <div class="exp-tags"><span class="cp-lang-tag">Leadership</span></div>
-        <ul class="exp-bullets">
-          <li>Mediated resident conflicts and mental health crises with a 16-person RA staff serving 700+ students.</li>
-          <li>Executed emergency preparedness plans, coordinating with emergency services during high-stress situations.</li>
-          <li>Managed duty schedules and resident tracking using spreadsheets.</li>
+          <li>Designed and shipped a personalized clothing recommendation engine combining embedding generation with vector retrieval, achieving 97% catalog embedding coverage and sub-5ms query latency via in-process pgvector.</li>
+          <li>Optimized seller-facing APIs via Redis caching, cutting p99 latency from 2.8s to 560ms and boosting throughput 2.3x.</li>
+          <li>Migrated 20+ endpoints in the seller domain from a FastAPI monolith into a modular NestJS/TypeScript REST service.</li>
         </ul>
       </div>
     </div>
 
     <div class="exp-card exp-right">
       <div class="exp-card-body">
-        <div class="exp-role">Software Engineer Intern · Cognitive Tutoring Authoring Tools</div>
-        <div class="exp-date">August 2025 – January 2026</div>
-        <div class="exp-tags"><span class="cp-lang-tag">Vue.js</span><span class="cp-lang-tag">Pinia</span><span class="cp-lang-tag">JavaScript</span></div>
+        <div class="exp-role">Software Engineer Intern · Cognitive Tutoring Authoring Tools (CMU HCII)</div>
+        <div class="exp-date">December 2024 – May 2025</div>
+        <div class="exp-tags"><span class="cp-lang-tag">Vue.js</span><span class="cp-lang-tag">JavaScript</span></div>
         <ul class="exp-bullets">
-          <li>Shipped a Vue.js data-sync feature serving 3,000+ users with reusable notifications and input validation.</li>
-          <li>Centralized file handling in Pinia, replacing 1,000+ lines of legacy code and fixing state-desync bugs.</li>
-          <li>Re-architected the editor's save and undo-history logic, resolving 40+ bugs to eliminate false save warnings.</li>
+          <li>Built a Vue.js drag-and-drop graph editor for authoring logic in AI tutoring systems, used to edit 30K+ problems.</li>
+          <li>Engineered real-time graph editing with node/edge manipulation, subgraph operations, and proximity-based connection detection, enforcing structural constraints while maintaining 60–75ms interaction latency.</li>
+          <li>Designed reversible graph mutations for undo/redo operations, preventing state divergence and race conditions.</li>
         </ul>
       </div>
     </div>
   </div>
 </div>
-
-
 <!-- Connect Section — left: header + links -->
 <div class="cp-text" id="cp-connect-left">
   <div class="connect-hero">
@@ -264,7 +243,7 @@
         <svg class="connect-link-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
         GitHub
       </a>
-      <a class="connect-link" href="https://www.linkedin.com/in/evangeline-li-85704619a/" target="_blank" rel="noopener">
+      <a class="connect-link" href="https://www.linkedin.com/in/evayifanli/" target="_blank" rel="noopener">
         <svg class="connect-link-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
         LinkedIn
       </a>
@@ -319,19 +298,16 @@
   </div>
 </div>
 
-<!-- Scroll hint -->
-<div id="scroll-hint">
-  <span class="scroll-hint-text">scroll to navigate</span>
-  <svg class="scroll-hint-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-    <line x1="12" y1="5" x2="12" y2="19"/>
-    <polyline points="19 12 12 19 5 12"/>
-  </svg>
-</div>
+<!-- Social links — fixed bottom-right -->
+<nav id="social-corner" aria-label="Social links">
+  <a href="https://github.com/EvuhLi" target="_blank" rel="noopener" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg></a>
+  <a href="https://www.linkedin.com/in/evayifanli/" target="_blank" rel="noopener" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+</nav>
 
 <!-- Progress bar -->
 <div id="progress-bar">
   <div id="progress-fill"></div>
-  <div class="cp-marker active" data-target="0.00" style="left:0%"><span class="cp-label">About</span></div>
+  <div class="cp-marker active" data-target="0.00" style="left:0%"><span class="cp-label">Home</span></div>
   <div class="cp-marker" data-target="0.30" style="left:25%"><span class="cp-label">Art</span></div>
   <div class="cp-marker" data-target="0.50" style="left:50%"><span class="cp-label">Projects</span></div>
   <div class="cp-marker" data-target="0.70" style="left:75%"><span class="cp-label">Experience</span></div>

@@ -44,13 +44,13 @@ document.querySelectorAll('.cp-item').forEach(item => {
 const PROJECT_DATA = {
   loom: {
     title: 'Loom',
-    img: 'project pics/loom.png',
-    tags: ['React', 'Node.js/Express', 'Python', 'FastAPI', 'MongoDB', 'PyTorch/CLIP', 'D3.js'],
-    desc: 'Hacking4Humanity Finalist — a social platform that deters art scraping with 10+ layers of protection: rate limiting, bot detection, and screenshot deterrence.',
+    img: 'img/projects/loom.webp',
+    tags: ['React', 'Node.js/Express', 'Python', 'FastAPI', 'MongoDB', 'AWS S3', 'PyTorch', 'OpenAI CLIP'],
+    desc: '1st place out of 55+ participants at Hacking4Humanity — a full-stack artist platform built to protect human-made art.',
     bullets: [
-      'Built a social platform deterring art scraping with 10+ protection layers (rate limiting, bot detection, screenshot deterrence).',
-      'Cut feed load 50x (5s to 100ms) via metadata/image separation, two-tier HTTP caching, and MongoDB indexing.',
-      'Invited to discuss AI-driven safety with PA First Lady Lori Shapiro at the Governor\'s Residence.',
+      'Placed 1st out of 55+ participants at Hacking4Humanity, building a full-stack artist platform to protect human-made art.',
+      'Engineered a FastAPI ML microservice featuring ensemble bot detection (MLP, honeypots), PyTorch subperceptual perturbations for adversarial art cloaking, and OpenAI CLIP for multi-modal tagging.',
+      'Cut feed delivery latency from 2.5s to 50ms using an AWS S3 and CloudFront pipeline with MongoDB keyset pagination.',
     ],
     links: [
       { label: 'GitHub', href: 'https://github.com/EvuhLi/Loom' },
@@ -59,11 +59,11 @@ const PROJECT_DATA = {
   },
   minecraft: {
     title: 'Minecraft Live',
-    img: 'project pics/minecraftlive.png',
+    img: 'img/projects/minecraftlive.webp',
     tags: ['Python', 'MediaPipe', 'OpenCV', 'WebSockets', 'pynput'],
-    desc: 'Real-time motion controller translating 10+ body poses into Minecraft inputs at 15ms/frame (66 FPS).',
+    desc: 'Real-time motion controller translating 10+ body poses into Minecraft inputs at 66 FPS.',
     bullets: [
-      'Built a real-time motion controller translating 10+ body poses into Minecraft inputs at 15ms/frame (66 FPS).',
+      'Built a real-time motion controller translating 10+ body poses into Minecraft inputs in real time at 66 FPS.',
       'Engineered a cross-platform mobile controller over WebSockets/UDP with drift calibration and dead-zone filtering.',
       'Designed a configurable, debounced gesture state machine converting noisy pose data into stable game controls.',
     ],
@@ -105,7 +105,7 @@ document.querySelectorAll('.art-frame').forEach(frame => {
   frame.addEventListener('click', e => {
     e.stopPropagation();
     const img = frame.querySelector('img');
-    modalInner.innerHTML = `<img src="${img.src}" style="max-width:85vw;max-height:82vh;width:auto;height:auto;display:block;">`;
+    modalInner.innerHTML = `<img src="${img.dataset.full || img.src}" style="max-width:85vw;max-height:82vh;width:auto;height:auto;display:block;">`;
     modalOverlay.classList.add('open', 'art-mode');
   });
 });
@@ -121,22 +121,20 @@ document.querySelectorAll('.cp-marker').forEach(m => {
   });
 });
 
-// ── SCROLL HINT ──
+// ── HERO: split the name into letters for the staggered reveal ──
 (function () {
-  const hint = document.getElementById('scroll-hint');
-  if (!hint) return;
-  const dismiss = () => {
-    hint.style.animation = 'none';
-    hint.style.transition = 'opacity 0.18s ease';
-    hint.style.opacity = '0';
-    setTimeout(() => hint.remove(), 200);
-    window.removeEventListener('scroll',    dismiss);
-    window.removeEventListener('wheel',     dismiss);
-    window.removeEventListener('touchmove', dismiss);
-  };
-  window.addEventListener('scroll',    dismiss, { passive: true });
-  window.addEventListener('wheel',     dismiss, { passive: true });
-  window.addEventListener('touchmove', dismiss, { passive: true });
+  let i = 0;
+  document.querySelectorAll('#hero .hero-word').forEach(word => {
+    const text = word.textContent;
+    word.textContent = '';
+    for (const ch of text) {
+      const span = document.createElement('span');
+      span.className = 'hero-char';
+      span.style.setProperty('--i', i++);
+      span.textContent = ch;
+      word.appendChild(span);
+    }
+  });
 })();
 
 // ── SCROLL ──
@@ -147,42 +145,6 @@ window.addEventListener('scroll', () => {
   updateProgressBar(scrollProgress);
 });
 
-
-// ── GITHUB STATS ──
-(async function fetchGithubStats() {
-  const GITHUB_USER = 'EvuhLi';
-  try {
-    const [user, repos, commitSearch] = await Promise.all([
-      fetch(`https://api.github.com/users/${GITHUB_USER}`).then(r => r.json()),
-      fetch(`https://api.github.com/users/${GITHUB_USER}/repos?per_page=100`).then(r => r.json()),
-      fetch(`https://api.github.com/search/commits?q=author:${GITHUB_USER}&per_page=1`, {
-        headers: { Accept: 'application/vnd.github.cloak-preview+json' }
-      }).then(r => r.json()),
-    ]);
-
-    if (typeof user.public_repos === 'number')
-      document.getElementById('gh-repos').textContent = user.public_repos;
-
-    if (typeof commitSearch.total_count === 'number') {
-      const n = commitSearch.total_count;
-      document.getElementById('gh-commits').textContent = n >= 1000 ? (n / 1000).toFixed(1) + 'k' : n;
-    }
-
-    if (Array.isArray(repos)) {
-      const langBytes = {};
-      repos.forEach(r => {
-        if (r.language) langBytes[r.language] = (langBytes[r.language] || 0) + (r.size || 1);
-      });
-      const topLangs = Object.entries(langBytes).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([l]) => l);
-      document.getElementById('gh-langs').innerHTML =
-        topLangs.map(l => `<span class="gh-lang-pill">${l}</span>`).join('');
-    }
-
-    const now = new Date();
-    document.getElementById('gh-updated').textContent =
-      `live · ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-  } catch (_) {}
-})();
 
 // ── CONNECT FORM ──
 (function () {
@@ -267,7 +229,7 @@ window.addEventListener('scroll', () => {
 
 // ── CLIPBOARD ──
 (function () {
-  ['email-copy-btn', 'about-email-copy-btn'].forEach(id => {
+  ['email-copy-btn'].forEach(id => {
     const btn = document.getElementById(id);
     if (!btn) return;
     btn.addEventListener('click', () => {
