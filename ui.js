@@ -31,10 +31,27 @@ function openModal(item) {
   let html = `<h2>${role}</h2>`;
   if (placeEl)  html += `<div class="modal-place">${placeEl.innerHTML}</div>`;
   if (detailEl) html += detailEl.innerHTML;
+  setModalMode(null);
   modalInner.innerHTML = html;
   modalOverlay.classList.add('open');
 }
-function closeModal() { modalOverlay.classList.remove('open', 'art-mode', 'project-mode'); }
+// Keep the mode class (art / project) until the fade-out finishes — removing it
+// immediately restyles the card mid-fade, which made closing look glitchy.
+let modalCloseTimer = null;
+function setModalMode(mode) {
+  clearTimeout(modalCloseTimer);
+  modalOverlay.classList.remove('art-mode', 'project-mode');
+  if (mode) modalOverlay.classList.add(mode);
+}
+function closeModal() {
+  if (!modalOverlay.classList.contains('open')) return;
+  modalOverlay.classList.remove('open');
+  clearTimeout(modalCloseTimer);
+  modalCloseTimer = setTimeout(() => {
+    modalOverlay.classList.remove('art-mode', 'project-mode');
+    modalInner.innerHTML = '';
+  }, 400);
+}
 
 document.querySelectorAll('.cp-item').forEach(item => {
   item.addEventListener('click', (e) => { e.stopPropagation(); openModal(item); });
@@ -91,7 +108,8 @@ function openProjectModal(key) {
       <div class="pm-links">${linksHtml}</div>
     </div>
   `;
-  modalOverlay.classList.add('open', 'project-mode');
+  setModalMode('project-mode');
+  modalOverlay.classList.add('open');
 }
 
 document.querySelectorAll('.exp-card.exp-project').forEach(card => {
@@ -106,7 +124,8 @@ document.querySelectorAll('.art-frame').forEach(frame => {
     e.stopPropagation();
     const img = frame.querySelector('img');
     modalInner.innerHTML = `<img src="${img.dataset.full || img.src}" style="max-width:85vw;max-height:82vh;width:auto;height:auto;display:block;">`;
-    modalOverlay.classList.add('open', 'art-mode');
+    setModalMode('art-mode');
+    modalOverlay.classList.add('open');
   });
 });
 modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
