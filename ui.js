@@ -1,3 +1,31 @@
+// ── SCROLL PACING ──
+// The scene works in "raw" progress (0–1). Physical scrolling is stretched through the
+// Projects and Experience sections so their cards don't fly past: each of those raw
+// ranges gets SLOWDOWN× more scroll distance, and the page is made taller to match.
+const PROJECTS_SLOWDOWN   = 2.5;
+const EXPERIENCE_SLOWDOWN = 2.5;
+const PACE_BASE_VH = 700; // original #scroll-space height
+// [raw start, raw end, slowdown] — everything outside these ranges keeps its old pace
+const PACE_SEGMENTS = (() => {
+  const slow = [[0.42, 0.60, PROJECTS_SLOWDOWN], [0.62, 0.80, EXPERIENCE_SLOWDOWN]];
+  const segs = []; let r = 0;
+  slow.forEach(([r0, r1, k]) => { if (r0 > r) segs.push([r, r0, 1]); segs.push([r0, r1, k]); r = r1; });
+  if (r < 1) segs.push([r, 1, 1]);
+  const total = segs.reduce((t, [r0, r1, k]) => t + (r1 - r0) * k, 0);
+  let p = 0;
+  return { total, segs: segs.map(([r0, r1, k]) => { const p0 = p; p += (r1 - r0) * k / total; return { r0, r1, p0, p1: p }; }) };
+})();
+document.getElementById('scroll-space').style.height = ((PACE_BASE_VH - 100) * PACE_SEGMENTS.total + 100) + 'vh';
+
+function physicalToRaw(p) {
+  for (const s of PACE_SEGMENTS.segs) if (p <= s.p1) return s.r0 + (p - s.p0) / (s.p1 - s.p0) * (s.r1 - s.r0);
+  return 1;
+}
+function rawToPhysical(r) {
+  for (const s of PACE_SEGMENTS.segs) if (r <= s.r1) return s.p0 + (r - s.r0) / (s.r1 - s.r0) * (s.p1 - s.p0);
+  return 1;
+}
+
 // ── PROGRESS BAR ──
 // maps scroll progress to bar display progress so dots align with fill
 function scrollToDisplay(raw) {
@@ -136,8 +164,20 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal
 document.querySelectorAll('.cp-marker').forEach(m => {
   m.addEventListener('click', () => {
     const t = parseFloat(m.dataset.target);
-    window.scrollTo({ top: t * (document.body.scrollHeight - window.innerHeight), behavior: 'smooth' });
+    window.scrollTo({ top: rawToPhysical(t) * (document.body.scrollHeight - window.innerHeight), behavior: 'smooth' });
   });
+});
+
+// ── EXPERIENCE: split "Role · Company" into company (title) + role (subtitle) ──
+document.querySelectorAll('#exp2-inner .exp-role').forEach(el => {
+  const i = el.textContent.indexOf(' · ');
+  if (i < 0) return;
+  const role = el.textContent.slice(0, i).trim();
+  const org  = el.textContent.slice(i + 3).trim();
+  el.textContent = '';
+  const o = document.createElement('span'); o.className = 'exp-org'; o.textContent = org;
+  const r = document.createElement('span'); r.className = 'exp-position'; r.textContent = role;
+  el.append(o, r);
 });
 
 // ── HERO: split the name into letters for the staggered reveal ──
@@ -160,7 +200,7 @@ document.querySelectorAll('.cp-marker').forEach(m => {
 updateProgressBar(0);
 
 window.addEventListener('scroll', () => {
-  scrollProgress = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+  scrollProgress = physicalToRaw(Math.min(Math.max(window.scrollY / (document.body.scrollHeight - window.innerHeight), 0), 1));
   updateProgressBar(scrollProgress);
 });
 
